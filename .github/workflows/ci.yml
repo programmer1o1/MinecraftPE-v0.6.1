@@ -1,0 +1,87 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  # ── macOS (arm64 / Apple Silicon) ─────────────────────────────────────────
+  # The only fully-supported desktop port; builds with SDL2 + OpenGL 2.1 + OpenAL.
+  macos:
+    name: macOS (arm64)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: brew install sdl2 libpng zlib
+
+      - name: Build
+        working-directory: handheld/project/macos
+        run: make -j$(sysctl -n hw.logicalcpu)
+
+      - name: Upload binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: minecraftpe-macos
+          path: handheld/project/macos/minecraftpe
+
+  # ── Android (armeabi-v7a) ──────────────────────────────────────────────────
+  # Requires NDK r16b — the last release with stlport_static (used in Application.mk).
+  # NDK r18+ removed stlport; to upgrade, Application.mk would need APP_STL := c++_static.
+  android:
+    name: Android (armeabi-v7a, NDK r16b)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install NDK r16b
+        run: |
+          wget -q https://dl.google.com/android/repository/android-ndk-r16b-linux-x86_64.zip
+          unzip -q android-ndk-r16b-linux-x86_64.zip
+          echo "NDK_ROOT=$PWD/android-ndk-r16b" >> $GITHUB_ENV
+
+      - name: Build
+        working-directory: handheld/project/android
+        run: $NDK_ROOT/ndk-build -j$(nproc) NDK_PROJECT_PATH=. APP_BUILD_SCRIPT=jni/Android.mk
+
+      - name: Upload .so
+        uses: actions/upload-artifact@v4
+        with:
+          name: minecraftpe-android
+          path: handheld/project/android/libs/
+
+  # ── Dedicated server (Linux x86, 32-bit) ──────────────────────────────────
+  # Uses the CMakeLists in dedicated_server/; requires gcc-multilib for -m32.
+  dedicated-server:
+    name: Dedicated server (Linux x86)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install 32-bit toolchain
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y gcc-multilib g++-multilib cmake
+
+      - name: Configure
+        working-directory: handheld/project/dedicated_server
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release .
+
+      - name: Build
+        working-directory: handheld/project/dedicated_server
+        run: cmake --build build -j$(nproc)
+
+      - name: Upload binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: minecraftpe-server
+          path: handheld/project/dedicated_server/build/
+
+  # ── Platforms NOT in CI ────────────────────────────────────────────────────
+  # iOS      — requires Xcode + code signing; no public runner supports this cleanly.
+  # Win32    — requires MSVC or adapting the VS project to MinGW; tracked as TODO.
+  # Raspberry Pi — requires Broadcom VideoCore headers (/opt/vc/) which are not
+  #               available on standard runners; cross-compile toolchain is niche.

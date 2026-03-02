@@ -940,7 +940,8 @@ void LevelRenderer::renderEntities(Vec3 cam, Culler* culler, float a) {
 		for (int i = 0; i < totalEntities; i++) {
 			Entity* entity = entities[i];
 
-			if (entity->shouldRender(cam) && culler->isVisible(entity->bb))
+				// Expand BB slightly so entities at the frustum edge aren't incorrectly culled
+			if (entity->shouldRender(cam) && culler->isVisible(entity->bb.grow(0.5f, 0.5f, 0.5f)))
 			{
 				if (entity == mc->cameraTargetPlayer && mc->options.thirdPersonView == 0 && mc->cameraTargetPlayer->isPlayer() && !((Player*)mc->cameraTargetPlayer)->isSleeping()) continue;
 				if (entity == mc->cameraTargetPlayer && !mc->options.thirdPersonView)

@@ -128,7 +128,7 @@ void NinecraftApp::teardown()
 	Recipes ::teardownRecipes();
 	TileEntity::teardownTileEntities();
 #endif
-#ifdef WIN32
+#if !defined(ANDROID) && !defined(STANDALONE_SERVER)
 	ItemRenderer::teardown_static();
 	if (EntityTileRenderer::instance != NULL) {
 		delete EntityTileRenderer::instance;

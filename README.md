@@ -1,12 +1,26 @@
 # Minecraft PE v0.6.1
 
-An leaked source code of very early **Minecraft Pocket Edition** (0.6.1 version, circa 2012).
+Leaked source code of very early **Minecraft Pocket Edition** (v0.6.1, circa 2012).
 
-This repository includes a **macOS port** (arm64 / Apple Silicon) built on top of the Raspberry Pi target, using SDL2 for windowing and input, and the system OpenGL/OpenAL frameworks.
+The codebase originally targeted **Android**, **iOS**, **Win32**, and **Raspberry Pi**. A **macOS port** (arm64 / Apple Silicon) has been added on top of the Raspberry Pi target, using SDL2 for windowing and input.
 
 ---
 
-## Dependencies
+## Platforms
+
+| Platform | Status | Notes |
+|---|---|---|
+| Android | Original | NDK build system in `handheld/project/android/` |
+| iOS | Original | Xcode project in `handheld/project/ios/` |
+| Win32 | Original | Visual Studio project in `handheld/project/win32/` |
+| Raspberry Pi | Original | Makefile in `handheld/project/rpi/` |
+| macOS (arm64) | Added | SDL2 + OpenGL 2.1 + OpenAL, Makefile in `handheld/project/macos/` |
+
+---
+
+## macOS Build
+
+### Dependencies
 
 Install via [Homebrew](https://brew.sh):
 
@@ -14,28 +28,25 @@ Install via [Homebrew](https://brew.sh):
 brew install sdl2 libpng zlib
 ```
 
-The following system frameworks are used directly (no extra install needed):
+System frameworks used directly (no extra install needed):
 - `OpenGL.framework` — legacy compatibility profile (2.1)
 - `OpenAL.framework` — audio playback
 - `Foundation.framework` — file utilities
 
----
-
-## Building
+### Building
 
 ```
 cd handheld/project/macos
 make -j8
 ```
 
-The output binary is `handheld/project/macos/minecraftpe`. Run it from that directory so relative asset paths (`data/`) resolve correctly:
+Run the binary from that directory so relative asset paths (`data/`) resolve correctly:
 
 ```
-cd handheld/project/macos
 ./minecraftpe
 ```
 
-To do a clean rebuild:
+Clean rebuild:
 
 ```
 make clean && make -j8
@@ -43,7 +54,7 @@ make clean && make -j8
 
 ---
 
-## Controls
+## Controls (macOS / desktop)
 
 | Key / Action | Function |
 |---|---|
@@ -63,9 +74,7 @@ The mouse is captured on entering a world. Move the mouse to look around.
 
 ---
 
-## Save location
-
-Worlds and options are stored in:
+## Save location (macOS)
 
 ```
 ~/Library/Application Support/minecraft/
@@ -75,12 +84,10 @@ Worlds and options are stored in:
 
 ## macOS port — files changed
 
-The port targets macOS (arm64) with `clang++`. The following source files were added or modified to enable macOS support:
-
 | File | Change |
 |---|---|
 | `handheld/src/main_macos.h` | SDL2 entry point — window creation, event loop, input feeding |
-| `handheld/src/AppPlatform_macos.h/cpp` | Platform abstraction for file I/O, screen size |
+| `handheld/src/AppPlatform_macos.h` | Platform abstraction for file I/O, screen size |
 | `handheld/project/macos/Makefile` | Build system for macOS |
 | `handheld/src/client/Minecraft.cpp` | Input path, key bindings, `_supportsNonTouchscreen` init ordering |
 | `handheld/src/client/Options.cpp` | WASD/Space/Shift bindings, `useMouseForDigging`, `viewDistance` |
@@ -95,11 +102,13 @@ The port targets macOS (arm64) with `clang++`. The following source files were a
 
 ---
 
-## Known issues (upstream)
+## Known issues
 
-From `docs/bugs-handheld.txt`:
+From `docs/bugs-handheld.txt` — status of each upstream bug:
 
-- Frustum culler is not 100% correct for entities
-- Lighting has minor inaccuracies
-- A few small static memory leaks (marked `@memleak` in source)
-- Water horizon ignores head-bob offset
+| Issue | Status |
+|---|---|
+| Frustum culler not 100% correct for entities | **Fixed** — entity BBs are expanded by 0.5 units before frustum test to prevent edge-of-screen pop-out |
+| Lighting has minor inaccuracies | Open — inherent to the reconstruction; no specific fix known |
+| Static memory leaks in renderer singletons | **Fixed** — `ItemRenderer`, `EntityTileRenderer`, `TileEntityRenderDispatcher` are now cleaned up on all non-Android platforms |
+| Water horizon ignores head-bob offset | Open — the world-space water horizon plane is not implemented in this PE reconstruction; the underwater screen overlay (`renderWater`) is disabled due to missing `misc/water.png` asset |
