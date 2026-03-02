@@ -4,6 +4,7 @@
 //package net.minecraft.client.sound;
 
 #include <string>
+#include <cstdlib>
 
 class SoundDesc
 {
@@ -43,7 +44,9 @@ public:
 
     void destroy() const {
         if (isValid()) {
-            delete buffer;
+            // iOS runtime-decoded sounds are allocated with malloc().
+            // Static embedded PCM blobs are never destroyed (see SoundRepository).
+            free(buffer);
             buffer = 0;
         }
     }

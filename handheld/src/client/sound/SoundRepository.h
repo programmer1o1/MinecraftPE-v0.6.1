@@ -15,7 +15,7 @@ class SoundRepository
 
 public:
     ~SoundRepository() {
-#ifdef __APPLE__
+#if defined(__APPLE__) && !defined(MACOS)
         SoundMap::iterator it = map.begin();
         for (; it != map.end(); ++it) {
             SoundList& list = it->second;

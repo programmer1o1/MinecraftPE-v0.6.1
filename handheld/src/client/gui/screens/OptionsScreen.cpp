@@ -4,6 +4,7 @@
 #include "DialogDefinitions.h"
 #include "../../Minecraft.h"
 #include "../../../AppPlatform.h"
+#include "../../../locale/I18n.h"
 
 #include "../components/OptionsPane.h"
 #include "../components/ImageButton.h"
@@ -11,6 +12,7 @@
 OptionsScreen::OptionsScreen()
 : btnClose(NULL),
   bHeader(NULL),
+  currentOptionPane(NULL),
   selectedCategory(0) {
 }
 
@@ -36,6 +38,8 @@ OptionsScreen::~OptionsScreen() {
 		}
 	}
 	categoryButtons.clear();
+	optionPanes.clear();
+	currentOptionPane = NULL;
 }
 
 void OptionsScreen::init() {
@@ -49,10 +53,10 @@ void OptionsScreen::init() {
 	def.setSrc(IntRectangle(150, 0, (int)def.width, (int)def.height));
 	btnClose->setImageDef(def, true);
 
-	categoryButtons.push_back(new Touch::TButton(2, "Login"));
-	categoryButtons.push_back(new Touch::TButton(3, "Game"));
-	categoryButtons.push_back(new Touch::TButton(4, "Controls"));
-	categoryButtons.push_back(new Touch::TButton(5, "Graphics"));
+	categoryButtons.push_back(new Touch::TButton(2, I18n::get("options.category.audio")));
+	categoryButtons.push_back(new Touch::TButton(3, I18n::get("options.category.game")));
+	categoryButtons.push_back(new Touch::TButton(4, I18n::get("options.category.controls")));
+	categoryButtons.push_back(new Touch::TButton(5, I18n::get("options.category.graphics")));
 	buttons.push_back(bHeader);
 	buttons.push_back(btnClose);
 	for(std::vector<Touch::TButton*>::iterator it = categoryButtons.begin(); it != categoryButtons.end(); ++it) {
@@ -130,10 +134,33 @@ void OptionsScreen::generateOptionScreens() {
 	optionPanes.push_back(new OptionsPane());
 	optionPanes.push_back(new OptionsPane());
 	optionPanes.push_back(new OptionsPane());
-	// Mojang Pane
-	optionPanes[0]->createOptionsGroup("options.group.mojang")
-		//.addOptionItem(&Options::Option::THIRD_PERSON, minecraft);
-		.addOptionItem(&Options::Option::SENSITIVITY, minecraft);
+	// Audio
+	optionPanes[0]->createOptionsGroup("options.group.audio")
+		.addOptionItem(&Options::Option::MUSIC, minecraft)
+		.addOptionItem(&Options::Option::SOUND, minecraft);
+
+	// Game
+	optionPanes[1]->createOptionsGroup("options.group.game")
+		.addOptionItem(&Options::Option::DIFFICULTY, minecraft)
+		.addOptionItem(&Options::Option::THIRD_PERSON, minecraft)
+		.addOptionItem(&Options::Option::HIDE_GUI, minecraft)
+		.addOptionItem(&Options::Option::SERVER_VISIBLE, minecraft);
+
+	// Controls
+	optionPanes[2]->createOptionsGroup("options.group.controls")
+		.addOptionItem(&Options::Option::SENSITIVITY, minecraft)
+		.addOptionItem(&Options::Option::INVERT_MOUSE, minecraft)
+		.addOptionItem(&Options::Option::LEFT_HANDED, minecraft)
+		.addOptionItem(&Options::Option::USE_TOUCH_JOYPAD, minecraft)
+		.addOptionItem(&Options::Option::DESTROY_VIBRATION, minecraft);
+
+	// Graphics
+	optionPanes[3]->createOptionsGroup("options.group.graphics")
+		.addOptionItem(&Options::Option::GRAPHICS, minecraft)
+		.addOptionItem(&Options::Option::AMBIENT_OCCLUSION, minecraft)
+		.addOptionItem(&Options::Option::RENDER_DISTANCE, minecraft)
+		.addOptionItem(&Options::Option::GUI_SCALE, minecraft)
+		.addOptionItem(&Options::Option::VIEW_BOBBING, minecraft);
 // 	int mojangGroup = optionPanes[0]->createOptionsGroup("Mojang");
 // 	static const int arr[] = {5,4,3,15};
 // 	std::vector<int> vec (arr, arr + sizeof(arr) / sizeof(arr[0]) );

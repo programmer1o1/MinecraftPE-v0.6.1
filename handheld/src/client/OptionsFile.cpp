@@ -1,6 +1,6 @@
 #include "OptionsFile.h"
 #include <stdio.h>
-#include <string.h>
+#include "../util/StringUtils.h"
 
 OptionsFile::OptionsFile() {
 #ifdef __APPLE__
@@ -24,12 +24,13 @@ void OptionsFile::save(const StringVector& settings) {
 
 StringVector OptionsFile::getOptionStrings() {
 	StringVector returnVector;
-	FILE* pFile = fopen(settingsPath.c_str(), "w");
+	FILE* pFile = fopen(settingsPath.c_str(), "r");
 	if(pFile != NULL) {
-		char lineBuff[128];
+		char lineBuff[256];
 		while(fgets(lineBuff, sizeof lineBuff, pFile)) {
-			if(strlen(lineBuff) > 2)
-				returnVector.push_back(std::string(lineBuff));
+			std::string line = Util::stringTrim(std::string(lineBuff));
+			if(line.length() > 0)
+				returnVector.push_back(line);
 		}
 		fclose(pFile);
 	}

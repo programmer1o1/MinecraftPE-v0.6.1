@@ -106,7 +106,6 @@ public:
 
 	float music;
     float sound;
-    //note: sensitivity is transformed in Options::update
     float sensitivity;
     bool invertYMouse;
     int viewDistance;
@@ -207,12 +206,23 @@ public:
 			 pixelsPerMillimeter = value;
 		}
 		notifyOptionUpdate(item, value);
+		save();
     }
 	void set(const Option* item, int value) {
 		if(item == &Option::DIFFICULTY) {
 			difficulty = value;
+			if (difficulty != DIFFICULY_LEVELS[0] && difficulty != DIFFICULY_LEVELS[1]) {
+				difficulty = DIFFICULY_LEVELS[1];
+			}
+		} else if (item == &Option::RENDER_DISTANCE) {
+			viewDistance = value & 3;
+		} else if (item == &Option::GUI_SCALE) {
+			guiScale = value & 3;
+		} else if (item == &Option::GRAPHICS) {
+			fancyGraphics = value != 0;
 		}
 		notifyOptionUpdate(item, value);
+		save();
 	}
 
     void toggle(const Option* option, int dir) {
@@ -232,7 +242,19 @@ public:
             //minecraft->textures.reloadAll();
         }
         if (option == &Option::LIMIT_FRAMERATE) limitFramerate = !limitFramerate;
-        if (option == &Option::DIFFICULTY) difficulty = (difficulty + dir) & 3;
+        if (option == &Option::DIFFICULTY) {
+			const int difficultyLevelsNum = 2;
+			int difficultyIndex = 0;
+			for (int i = 0; i < difficultyLevelsNum; ++i) {
+				if (DIFFICULY_LEVELS[i] == difficulty) {
+					difficultyIndex = i;
+					break;
+				}
+			}
+			difficultyIndex += dir;
+			while (difficultyIndex < 0) difficultyIndex += difficultyLevelsNum;
+			difficulty = DIFFICULY_LEVELS[difficultyIndex % difficultyLevelsNum];
+		}
         if (option == &Option::GRAPHICS) {
             fancyGraphics = !fancyGraphics;
             //minecraft->levelRenderer.allChanged();
@@ -241,12 +263,19 @@ public:
             ambientOcclusion = !ambientOcclusion;
             //minecraft->levelRenderer.allChanged();
         }
-		notifyOptionUpdate(option, getBooleanValue(option));
+		if (option->isBoolean()) {
+			notifyOptionUpdate(option, getBooleanValue(option));
+		} else {
+			notifyOptionUpdate(option, getIntValue(option));
+		}
         save();
     }
 
 	int getIntValue(const Option* item) {
 		if(item == &Option::DIFFICULTY) return difficulty;
+		if(item == &Option::RENDER_DISTANCE) return viewDistance;
+		if(item == &Option::GUI_SCALE) return guiScale;
+		if(item == &Option::GRAPHICS) return fancyGraphics ? 1 : 0;
 		return 0;
 	}
 
@@ -273,8 +302,6 @@ public:
             return thirdPersonView;
         if (item == &Option::HIDE_GUI)
             return hideGui;
-		if (item == &Option::THIRD_PERSON)
-			return thirdPersonView;
 		if (item == &Option::SERVER_VISIBLE)
 			return serverVisible;
 		if (item == &Option::LEFT_HANDED)
@@ -312,6 +339,7 @@ public:
 	void addOptionToSaveOutput(StringVector& stringVector, std::string name, bool boolValue);
 	void addOptionToSaveOutput(StringVector& stringVector, std::string name, float floatValue);
 	void addOptionToSaveOutput(StringVector& stringVector, std::string name, int intValue);
+	void addOptionToSaveOutput(StringVector& stringVector, std::string name, const std::string& value);
 	void notifyOptionUpdate(const Option* option, bool value);
 	void notifyOptionUpdate(const Option* option, float value);
 	void notifyOptionUpdate(const Option* option, int value);

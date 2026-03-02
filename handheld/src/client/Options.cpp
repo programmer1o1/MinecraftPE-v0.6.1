@@ -3,7 +3,6 @@
 #include "Minecraft.h"
 #include "../platform/log.h"
 #include "../world/Difficulty.h"
-#include <cmath>
 #include <sstream>
 /*static*/
 bool Options::debugGl = false;
@@ -166,9 +165,9 @@ const float Options::SENSITIVITY_MIN_VALUE = 0.0f;
 const float Options::SENSITIVITY_MAX_VALUE = 1.0f;
 const float Options::PIXELS_PER_MILLIMETER_MIN_VALUE = 3.0f;
 const float Options::PIXELS_PER_MILLIMETER_MAX_VALUE = 4.0f;
-const int DIFFICULY_LEVELS[] = {
-	Difficulty::PEACEFUL,
-	Difficulty::NORMAL
+const int Options::DIFFICULY_LEVELS[] = {
+	0,
+	2
 };
 
 /*private*/
@@ -199,12 +198,30 @@ void Options::update()
 {
 	viewDistance = 2;
 	StringVector optionStrings = optionsFile.getOptionStrings();
-	for (unsigned int i = 0; i < optionStrings.size(); i += 2) {
-		const std::string& key = optionStrings[i];
-		const std::string& value = optionStrings[i+1];
+	for (unsigned int i = 0; i < optionStrings.size();) {
+		std::string key;
+		std::string value;
+		const std::string line = Util::stringTrim(optionStrings[i]);
+		const std::string::size_type splitPos = line.find(':');
+		if (splitPos != std::string::npos) {
+			key = Util::stringTrim(line.substr(0, splitPos));
+			value = Util::stringTrim(line.substr(splitPos + 1));
+			++i;
+		} else {
+			if (i + 1 >= optionStrings.size()) {
+				break;
+			}
+			key = Util::stringTrim(optionStrings[i]);
+			value = Util::stringTrim(optionStrings[i + 1]);
+			i += 2;
+		}
 
         //LOGI("reading key: %s (%s)\n", key.c_str(), value.c_str());
-        
+
+		// Audio
+		if (key == OptionStrings::Audio_Music) readFloat(value, music);
+		if (key == OptionStrings::Audio_Sound) readFloat(value, sound);
+
 		// Multiplayer
 		if (key == OptionStrings::Multiplayer_Username) username = value;
 		if (key == OptionStrings::Multiplayer_ServerVisible) readBool(value, serverVisible);
@@ -213,13 +230,19 @@ void Options::update()
         if (key == OptionStrings::Controls_Sensitivity) {
             float sens;
             if (readFloat(value, sens)) {
-                // sens is in range [0,1] with default/center at 0.5 (for aesthetics)
-                // We wanna map it to something like [0.3, 0.9] BUT keep 0.5 @ ~0.5...
-                sensitivity = 0.3f + std::pow(1.1f * sens, 1.3f) * 0.42f;
+				if (sens < 0.0f) sens = 0.0f;
+				if (sens > 1.0f) sens = 1.0f;
+				sensitivity = sens;
             }
         }
 		if (key == OptionStrings::Controls_InvertMouse) {
 			readBool(value, invertYMouse);
+		}
+		if (key == OptionStrings::Controls_UseTouchScreen) {
+			readBool(value, useTouchScreen);
+			if (!minecraft->supportNonTouchScreen()) {
+				useTouchScreen = true;
+			}
 		}
 		if (key == OptionStrings::Controls_IsLefthanded) {
 			readBool(value, isLeftHanded);
@@ -238,8 +261,22 @@ void Options::update()
 		if (key == OptionStrings::Graphics_Fancy) {
 			readBool(value, fancyGraphics);
 		}
+		if (key == OptionStrings::Graphics_AmbientOcclusion) {
+			readBool(value, ambientOcclusion);
+		}
+		if (key == OptionStrings::Graphics_ViewBobbing) {
+			readBool(value, bobView);
+		}
+		if (key == OptionStrings::Graphics_RenderDistance) {
+			readInt(value, viewDistance);
+			viewDistance &= 3;
+		}
+		if (key == OptionStrings::Graphics_GuiScale) {
+			readInt(value, guiScale);
+			guiScale &= 3;
+		}
 		if (key == OptionStrings::Graphics_LowQuality) {
-			bool isLow;
+			bool isLow = false;
 			readBool(value, isLow);
 			if (isLow) {
 				viewDistance = 3;
@@ -252,6 +289,12 @@ void Options::update()
 			// Only support peaceful and normal right now
 			if (difficulty != Difficulty::PEACEFUL && difficulty != Difficulty::NORMAL)
 				difficulty = Difficulty::NORMAL;
+		}
+		if (key == OptionStrings::Game_ThirdPerson) {
+			readBool(value, thirdPersonView);
+		}
+		if (key == OptionStrings::Game_HideGui) {
+			readBool(value, hideGui);
 		}
 	}
     
@@ -267,7 +310,6 @@ void Options::update()
 
 void Options::load()
 {
-	int a = 0;
 	//try {
 	//    if (!optionsFile.exists()) return;
 	//    BufferedReader br = /*new*/ BufferedReader(/*new*/ FileReader(optionsFile));
@@ -305,9 +347,17 @@ void Options::load()
 void Options::save()
 {
 	StringVector stringVec;
+
+	// Audio
+	addOptionToSaveOutput(stringVec, OptionStrings::Audio_Music, music);
+	addOptionToSaveOutput(stringVec, OptionStrings::Audio_Sound, sound);
+
 	// Game
+	addOptionToSaveOutput(stringVec, OptionStrings::Multiplayer_Username, username);
 	addOptionToSaveOutput(stringVec, OptionStrings::Multiplayer_ServerVisible, serverVisible);
 	addOptionToSaveOutput(stringVec, OptionStrings::Game_DifficultyLevel, difficulty);
+	addOptionToSaveOutput(stringVec, OptionStrings::Game_ThirdPerson, thirdPersonView);
+	addOptionToSaveOutput(stringVec, OptionStrings::Game_HideGui, hideGui);
 
 	// Input
 	addOptionToSaveOutput(stringVec, OptionStrings::Controls_InvertMouse, invertYMouse);
@@ -316,6 +366,13 @@ void Options::save()
 	addOptionToSaveOutput(stringVec, OptionStrings::Controls_UseTouchScreen, useTouchScreen);
 	addOptionToSaveOutput(stringVec, OptionStrings::Controls_UseTouchJoypad, isJoyTouchArea);
 	addOptionToSaveOutput(stringVec, OptionStrings::Controls_FeedbackVibration, destroyVibration);
+
+	// Graphics
+	addOptionToSaveOutput(stringVec, OptionStrings::Graphics_Fancy, fancyGraphics);
+	addOptionToSaveOutput(stringVec, OptionStrings::Graphics_AmbientOcclusion, ambientOcclusion);
+	addOptionToSaveOutput(stringVec, OptionStrings::Graphics_ViewBobbing, bobView);
+	addOptionToSaveOutput(stringVec, OptionStrings::Graphics_RenderDistance, viewDistance);
+	addOptionToSaveOutput(stringVec, OptionStrings::Graphics_GuiScale, guiScale);
 // 
 // 	static const Option MUSIC;
 // 	static const Option SOUND;
@@ -359,6 +416,7 @@ void Options::save()
 	//    System.out.println("Failed to save options");
 	//    e.printStackTrace();
 	//}
+	optionsFile.save(stringVec);
 }
 void Options::addOptionToSaveOutput(StringVector& stringVector, std::string name, bool boolValue) {
 	std::stringstream ss;
@@ -373,6 +431,11 @@ void Options::addOptionToSaveOutput(StringVector& stringVector, std::string name
 void Options::addOptionToSaveOutput(StringVector& stringVector, std::string name, int intValue) {
 	std::stringstream ss;
 	ss << name << ":" << intValue;
+	stringVector.push_back(ss.str());
+}
+void Options::addOptionToSaveOutput(StringVector& stringVector, std::string name, const std::string& value) {
+	std::stringstream ss;
+	ss << name << ":" << value;
 	stringVector.push_back(ss.str());
 }
 
@@ -454,8 +517,8 @@ bool Options::readInt(const std::string& string, int& value) {
 /*static*/
 bool Options::readBool(const std::string& string, bool& value) {
 	std::string s = Util::stringTrim(string);
-	if (string == "true" || string == "1" || string == "YES")  { value = true;  return true; }
-	if (string == "false" || string == "0" || string == "NO") { value = false; return true; }
+	if (s == "true" || s == "1" || s == "YES")  { value = true;  return true; }
+	if (s == "false" || s == "0" || s == "NO") { value = false; return true; }
 	return false;
 }
 

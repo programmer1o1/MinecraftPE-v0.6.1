@@ -1,0 +1,24 @@
+# macOS / Finder
+.DS_Store
+**/.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+Desktop.ini
+
+# Editor / IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+
+# Build outputs
+handheld/project/macos/obj/
+handheld/project/macos/minecraftpe
+handheld/project/raspberry/minecraftpi

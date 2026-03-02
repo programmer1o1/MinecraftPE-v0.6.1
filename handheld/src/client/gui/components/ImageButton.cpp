@@ -114,16 +114,20 @@ void ImageButton::render(Minecraft* minecraft, int xm, int ym) {
 //
 OptionButton::OptionButton(const Options::Option* option)
 :	_option(option),
+	_secondImage(false),
 	_isFloat(false),
+	_current(0.0f),
 	super(ButtonId, "")
 {
 }
 
 OptionButton::OptionButton(const Options::Option* option, float onValue, float offValue)
 :	_option(option),
+	_secondImage(false),
 	_isFloat(true),
 	_onValue(onValue),
 	_offValue(offValue),
+	_current(offValue),
 	super(ButtonId, "")
 {
 }

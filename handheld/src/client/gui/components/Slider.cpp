@@ -8,7 +8,13 @@
 Slider::Slider(Minecraft* minecraft, const Options::Option* option,  float progressMin, float progressMax)
 : sliderType(SliderProgress), mouseDownOnElement(false), option(option), numSteps(0), progressMin(progressMin), progressMax(progressMax) {
 	if(option != NULL) {
-		percentage = (minecraft->options.getProgressValue(option) - progressMin) / (progressMax - progressMin);
+		const float range = progressMax - progressMin;
+		if (Mth::abs(range) > 0.0001f) {
+			percentage = (minecraft->options.getProgressValue(option) - progressMin) / range;
+		} else {
+			percentage = 0.0f;
+		}
+		percentage = Mth::clamp(percentage, 0.0f, 1.0f);
 	}
 }
 
@@ -25,13 +31,14 @@ Slider::Slider(Minecraft* minecraft, const Options::Option* option, const std::v
 	assert(stepVec.size() > 1);
 	numSteps = sliderSteps.size();
 	if(option != NULL) {
-		curStepValue;
-		int curStep;
 		curStepValue = minecraft->options.getIntValue(option);
 		std::vector<int>::iterator currentItem = std::find(sliderSteps.begin(), sliderSteps.end(), curStepValue);
 		if(currentItem != sliderSteps.end()) {
-			curStep = currentItem - sliderSteps.begin();
+			curStep = (int)(currentItem - sliderSteps.begin());
 		}
+		curStep = Mth::Min(curStep, numSteps - 1);
+		curStepValue = sliderSteps[curStep];
+		percentage = float(curStep) / float(numSteps - 1);
 	}
 }
 
@@ -78,7 +85,12 @@ void Slider::tick(Minecraft* minecraft) {
 		int ym = Mouse::getY();
 		minecraft->screen->toGUICoordinate(xm, ym);
 		if(mouseDownOnElement) {
-			percentage = float(xm - x) / float(width);
+			const int xSliderStart = x + 5;
+			const int sliderWidth = width - 10;
+			if (sliderWidth <= 0) {
+				return;
+			}
+			percentage = float(xm - xSliderStart) / float(sliderWidth);
 			percentage = Mth::clamp(percentage, 0.0f, 1.0f);
 			setOption(minecraft);
 		}
@@ -92,8 +104,9 @@ void Slider::setOption( Minecraft* minecraft ) {
 				minecraft->options.set(option, curStepValue);
 			}
 		} else {
-			if(minecraft->options.getProgressValue(option) != percentage * (progressMax - progressMin) + progressMin) {
-				minecraft->options.set(option, percentage *  (progressMax - progressMin) + progressMin);
+			const float value = percentage * (progressMax - progressMin) + progressMin;
+			if(Mth::abs(minecraft->options.getProgressValue(option) - value) > 0.0001f) {
+				minecraft->options.set(option, value);
 			}
 		}
 	}
