@@ -39,7 +39,7 @@ void __gluMakeIdentityf(GLfloat m[16]) {
 
 void glInit()
 {
-#if !defined(OPENGL_ES) && !defined(MACOS)
+#if !defined(OPENGL_ES) && !defined(MACOS) && !defined(LINUX)
 	GLenum err = glewInit();
 	printf("Err: %d\n", err);
 #endif

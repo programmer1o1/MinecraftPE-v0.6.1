@@ -18,7 +18,7 @@ Screen* ScreenChooser::createScreen( ScreenId id )
 
 	// On macOS always use the touchscreen UI variant for screens (nicer look),
 	// while keeping useTouchscreen() = false so the renderer uses crosshair picking.
-#ifdef MACOS
+#if defined(MACOS) || defined(LINUX)
 	if (true) {
 #else
 	if (_mc->useTouchscreen()) {

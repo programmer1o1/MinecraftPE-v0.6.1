@@ -302,7 +302,7 @@ void SelectWorldScreen::tick()
 			minecraft->hostMultiplayer();
 			minecraft->setScreen(new ProgressScreen());
 			_hasStartedLevel = true;
-		#elif defined(WIN32) || defined(MACOS)
+		#elif defined(WIN32) || defined(MACOS) || defined(LINUX)
 			std::string name = getUniqueLevelName("world");
 			minecraft->setScreen(new SimpleChooseLevelScreen(name));
 		#else

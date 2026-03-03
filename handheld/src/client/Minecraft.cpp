@@ -691,7 +691,7 @@ void Minecraft::tickInput() {
 		if (isPressed) {
 			gui.handleKeyPressed(key);
 
-			#if defined(WIN32) || defined(RPI) || defined(MACOS)
+			#if defined(WIN32) || defined(RPI) || defined(MACOS) || defined(LINUX)
 				if (key >= '0' && key <= '9') {
 					int digit = key - '0';
 					int slot = digit - 1;
@@ -715,7 +715,7 @@ void Minecraft::tickInput() {
 					#endif
 				}
 			#endif
-			#if defined(RPI) || defined(MACOS)
+			#if defined(RPI) || defined(MACOS) || defined(LINUX)
 				if (key == Keyboard::KEY_E) {
 					screenChooser.setScreen(SCREEN_BLOCKSELECTION);
 				}
@@ -723,7 +723,7 @@ void Minecraft::tickInput() {
 					releaseMouse();
 				}
 			#endif
-			#if defined(MACOS)
+			#if defined(MACOS) || defined(LINUX)
 				if (key == Keyboard::KEY_F) {
 					options.isFlying = !options.isFlying;
 					player->noPhysics = options.isFlying;
@@ -843,7 +843,7 @@ void Minecraft::tickInput() {
 				}
 			#endif
 
-			#if defined(MACOS) || defined(RPI)
+			#if defined(MACOS) || defined(RPI) || defined(LINUX)
 				if (key == Keyboard::KEY_ESCAPE)
 					pauseGame(false);
 			#else
@@ -1253,8 +1253,8 @@ void Minecraft::_reloadInput() {
 #ifndef STANDALONE_SERVER
 	delete inputHolder;
 
-#ifdef MACOS
-	// On macOS always use keyboard + mouse regardless of useTouchScreen.
+#if defined(MACOS) || defined(LINUX)
+	// On macOS/Linux always use keyboard + mouse regardless of useTouchScreen.
 	// useTouchScreen stays true so ScreenChooser shows the touchscreen UI,
 	// but input is handled by keyboard/mouse, not the d-pad touch holder.
 	inputHolder = new CustomInputHolder(

@@ -35,6 +35,15 @@
     #define glOrthof(a,b,c,d,e,f)   glOrtho(a,b,c,d,e,f)
     #define glClearDepthf(x)        glClearDepth(x)
     #define glDepthRangef(a,b)      glDepthRange(a,b)
+#elif defined(LINUX)
+    // Linux desktop OpenGL — legacy/compatibility profile (2.1)
+    #include <GL/gl.h>
+    #include <GL/glext.h>
+    #define USE_VBO
+    #define glFogx(a,b)             glFogi(a,b)
+    #define glOrthof(a,b,c,d,e,f)   glOrtho(a,b,c,d,e,f)
+    #define glClearDepthf(x)        glClearDepth(x)
+    #define glDepthRangef(a,b)      glDepthRange(a,b)
 #else
     // Uglyness to fix redeclaration issues
     #ifdef WIN32

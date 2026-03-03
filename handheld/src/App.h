@@ -4,6 +4,9 @@
 #ifdef __APPLE__
 #define NO_EGL
 #endif
+#ifdef LINUX
+#define NO_EGL
+#endif
 #ifdef STANDALONE_SERVER
 #define NO_EGL
 #endif

@@ -4,7 +4,7 @@
 #ifdef RPI
 #include <SDL/SDL.h>
 #endif
-#ifdef MACOS
+#if defined(MACOS) || defined(LINUX)
 #include <SDL.h>
 #endif
 
@@ -31,7 +31,7 @@ void MouseHandler::grab() {
 	//LOGI("Grabbing input!\n");
 	SDL_WM_GrabInput(SDL_GRAB_ON);
 	SDL_ShowCursor(0);
-#elif defined(MACOS)
+#elif defined(MACOS) || defined(LINUX)
 	SDL_SetRelativeMouseMode(SDL_TRUE);
 	SDL_ShowCursor(0);
 #endif
@@ -42,7 +42,7 @@ void MouseHandler::release() {
 	//LOGI("Releasing input!\n");
 	SDL_WM_GrabInput(SDL_GRAB_OFF);
 	SDL_ShowCursor(1);
-#elif defined(MACOS)
+#elif defined(MACOS) || defined(LINUX)
 	SDL_SetRelativeMouseMode(SDL_FALSE);
 	SDL_ShowCursor(1);
 #endif
