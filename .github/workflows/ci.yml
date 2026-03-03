@@ -78,7 +78,7 @@ jobs:
   # NDK r18+ removed stlport; to upgrade, Application.mk would need APP_STL := c++_static.
   android:
     name: Android (armeabi-v7a, NDK r16b)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v4
 

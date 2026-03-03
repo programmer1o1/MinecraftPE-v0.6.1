@@ -3,8 +3,13 @@
 
 #include "SoundSystem.h"
 
-#import <OpenAL/al.h>
-#import <OpenAL/alc.h>
+#ifdef __APPLE__
+#  import <OpenAL/al.h>
+#  import <OpenAL/alc.h>
+#else
+#  include <AL/al.h>
+#  include <AL/alc.h>
+#endif
 
 #include <vector>
 #include <list>
