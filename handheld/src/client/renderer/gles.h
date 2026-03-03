@@ -53,8 +53,11 @@
 	#include <GL/glew.h>
 	#include <GL/GL.h>
 
-	#define glFogx(a,b)	glFogi(a,b)
-	#define glOrthof(a,b,c,d,e,f) glOrtho(a,b,c,d,e,f)
+	#define USE_VBO
+	#define glFogx(a,b)             glFogi(a,b)
+	#define glOrthof(a,b,c,d,e,f)   glOrtho(a,b,c,d,e,f)
+	#define glClearDepthf(x)        glClearDepth(x)
+	#define glDepthRangef(a,b)      glDepthRange(a,b)
 #endif
 
 
