@@ -64,7 +64,8 @@ jobs:
 
       - name: Build (Release)
         working-directory: handheld/project/win32
-        run: msbuild MinecraftWin32.sln /p:Configuration=Release /p:Platform=Win32 /m /nologo
+        # Retarget from the original v100 (VS 2010) toolset to v143 (VS 2022)
+        run: msbuild MinecraftWin32.sln /p:Configuration=Release /p:Platform=Win32 /p:PlatformToolset=v143 /m /nologo
 
       - name: Upload binary
         uses: actions/upload-artifact@v4
@@ -83,6 +84,9 @@ jobs:
 
       - name: Install NDK r16b
         run: |
+          # libncurses5 is required by NDK r16b's clang++ binary
+          sudo apt-get update -qq
+          sudo apt-get install -y libncurses5
           wget -q https://dl.google.com/android/repository/android-ndk-r16b-linux-x86_64.zip
           unzip -q android-ndk-r16b-linux-x86_64.zip
           echo "NDK_ROOT=$PWD/android-ndk-r16b" >> $GITHUB_ENV
