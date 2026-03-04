@@ -32,6 +32,14 @@ public:
 
     void forceDetach() {
         if (!_isAttached) return;
+        // Clear any pending JNI exception before detaching.
+        // On Android 13+ with -Xcheck:jni, DetachCurrentThread() aborts
+        // if there is a pending exception (e.g. from deprecated API calls
+        // made from a non-UI thread).
+        if (_env && _env->ExceptionOccurred()) {
+            _env->ExceptionDescribe();
+            _env->ExceptionClear();
+        }
         _vm->DetachCurrentThread();
         _isAttached = false;
     }

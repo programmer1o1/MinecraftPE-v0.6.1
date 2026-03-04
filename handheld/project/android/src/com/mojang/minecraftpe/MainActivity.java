@@ -240,14 +240,16 @@ public class MainActivity extends NativeActivity {
     }
 
     public int getScreenWidth() {
-    	Display display = ((WindowManager)this.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
-    	int out = Math.max(display.getWidth(), display.getHeight());
+    	DisplayMetrics metrics = new DisplayMetrics();
+    	getWindowManager().getDefaultDisplay().getRealMetrics(metrics);
+    	int out = Math.max(metrics.widthPixels, metrics.heightPixels);
     	System.out.println("getwidth: " + out);
     	return out;
     }
     public int getScreenHeight() {
-    	Display display = ((WindowManager)this.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
-    	int out = Math.min(display.getWidth(), display.getHeight());
+    	DisplayMetrics metrics = new DisplayMetrics();
+    	getWindowManager().getDefaultDisplay().getRealMetrics(metrics);
+    	int out = Math.min(metrics.widthPixels, metrics.heightPixels);
     	System.out.println("getheight: " + out);
     	return out;
     }
