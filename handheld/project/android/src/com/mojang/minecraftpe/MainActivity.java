@@ -240,15 +240,29 @@ public class MainActivity extends NativeActivity {
     }
 
     public int getScreenWidth() {
+    	System.out.println("getScreenWidth: enter");
     	DisplayMetrics metrics = new DisplayMetrics();
-    	getWindowManager().getDefaultDisplay().getRealMetrics(metrics);
+    	System.out.println("getScreenWidth: created metrics");
+    	android.view.WindowManager wm = getWindowManager();
+    	System.out.println("getScreenWidth: got wm=" + wm);
+    	android.view.Display display = wm.getDefaultDisplay();
+    	System.out.println("getScreenWidth: got display=" + display);
+    	display.getRealMetrics(metrics);
+    	System.out.println("getScreenWidth: w=" + metrics.widthPixels + " h=" + metrics.heightPixels);
     	int out = Math.max(metrics.widthPixels, metrics.heightPixels);
     	System.out.println("getwidth: " + out);
     	return out;
     }
     public int getScreenHeight() {
+    	System.out.println("getScreenHeight: enter");
     	DisplayMetrics metrics = new DisplayMetrics();
-    	getWindowManager().getDefaultDisplay().getRealMetrics(metrics);
+    	System.out.println("getScreenHeight: created metrics");
+    	android.view.WindowManager wm = getWindowManager();
+    	System.out.println("getScreenHeight: got wm=" + wm);
+    	android.view.Display display = wm.getDefaultDisplay();
+    	System.out.println("getScreenHeight: got display=" + display);
+    	display.getRealMetrics(metrics);
+    	System.out.println("getScreenHeight: w=" + metrics.widthPixels + " h=" + metrics.heightPixels);
     	int out = Math.min(metrics.widthPixels, metrics.heightPixels);
     	System.out.println("getheight: " + out);
     	return out;
