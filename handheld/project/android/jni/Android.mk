@@ -264,4 +264,4 @@ include $(BUILD_SHARED_LIBRARY)
 
 # NOTE: environment var NDK_MODULE_PATH needs to point to lib_projects folder
 $(call import-module,android/native_app_glue)
-$(call import-module, raknet/jni)
+$(call import-module,raknet/jni)

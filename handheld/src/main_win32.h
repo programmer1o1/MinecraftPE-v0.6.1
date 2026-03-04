@@ -24,6 +24,8 @@
 
 static App* g_app = 0;
 static volatile bool g_running = true;
+bool g_win32MouseCaptured = false;  // shared with MouseHandler.cpp
+HWND g_win32Hwnd = NULL;             // shared with MouseHandler.cpp
 
 static int getBits(int bits, int startBitInclusive, int endBitExclusive, int shiftTruncate) {
 	int sum = 0;
