@@ -67,26 +67,33 @@ jobs:
         # Retarget from the original v100 (VS 2010) toolset to v143 (VS 2022)
         run: msbuild MinecraftWin32.sln /p:Configuration=Release /p:Platform=Win32 /p:PlatformToolset=v143 /m /nologo
 
-      - name: Upload binary
+      - name: Copy runtime DLLs next to executables
+        run: Copy-Item handheld\lib\bin\*.dll handheld\project\win32\Release\
+        shell: pwsh
+
+      - name: Upload binaries + DLLs
         uses: actions/upload-artifact@v4
         with:
           name: minecraftpe-win32
-          path: handheld/project/win32/Release/MinecraftWin32.exe
+          path: handheld/project/win32/Release/
 
   # ── Android (armeabi-v7a) ──────────────────────────────────────────────────
   # Requires NDK r16b — the last release with stlport_static (used in Application.mk).
   # NDK r18+ removed stlport; to upgrade, Application.mk would need APP_STL := c++_static.
   android:
     name: Android (armeabi-v7a, NDK r16b)
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
       - name: Install NDK r16b
         run: |
-          # libncurses5 is required by NDK r16b's clang++ binary
+          # NDK r16b's clang++ links against libncurses.so.5 / libtinfo.so.5.
+          # Ubuntu 22.04 only ships ncurses6; create symlinks (ABI-compatible).
           sudo apt-get update -qq
-          sudo apt-get install -y libncurses5
+          sudo apt-get install -y libncurses6 libtinfo6
+          sudo ln -sf /lib/x86_64-linux-gnu/libncurses.so.6 /lib/x86_64-linux-gnu/libncurses.so.5 || true
+          sudo ln -sf /lib/x86_64-linux-gnu/libtinfo.so.6 /lib/x86_64-linux-gnu/libtinfo.so.5 || true
           wget -q https://dl.google.com/android/repository/android-ndk-r16b-linux-x86_64.zip
           unzip -q android-ndk-r16b-linux-x86_64.zip
           echo "NDK_ROOT=$PWD/android-ndk-r16b" >> $GITHUB_ENV
