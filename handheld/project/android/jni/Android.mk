@@ -245,6 +245,10 @@ LOCAL_SRC_FILES := ../../../src/main.cpp \
 ../../../src/world/level/tile/entity/FurnaceTileEntity.cpp \
 ../../../src/world/phys/HitResult.cpp
 
+# RakNet sources included directly (import-module is unreliable with NDK r16b)
+LOCAL_RAKNET_PATH := ../../../src/raknet
+LOCAL_SRC_FILES += $(patsubst $(LOCAL_PATH)/%,%,$(wildcard $(LOCAL_PATH)/$(LOCAL_RAKNET_PATH)/*.cpp))
+
 LOCAL_CFLAGS := -Wno-psabi $(LOCAL_CFLAGS)
 
 #LOCAL_CFLAGS := -DANDROID_PUBLISH -DDEMO_MODE $(LOCAL_CFLAGS)
@@ -254,7 +258,7 @@ LOCAL_CFLAGS := -Wno-psabi $(LOCAL_CFLAGS)
 #LOCAL_CFLAGS := -DGLDEBUG $(LOCAL_CFLAGS)
 
 LOCAL_LDLIBS    := -llog -landroid -lEGL -lGLESv1_CM -lOpenSLES
-LOCAL_STATIC_LIBRARIES := android_native_app_glue RakNet
+LOCAL_STATIC_LIBRARIES := android_native_app_glue
 
 #LOCAL_CPP_FEATURES := exceptions
 
@@ -264,4 +268,3 @@ include $(BUILD_SHARED_LIBRARY)
 
 # NOTE: environment var NDK_MODULE_PATH needs to point to lib_projects folder
 $(call import-module,android/native_app_glue)
-$(call import-module,raknet/jni)
