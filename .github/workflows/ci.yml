@@ -22,11 +22,17 @@ jobs:
         working-directory: handheld/project/macos
         run: make -j$(sysctl -n hw.logicalcpu)
 
-      - name: Upload binary
+      - name: Stage playable artifact
+        run: |
+          mkdir -p artifact
+          cp handheld/project/macos/minecraftpe artifact/
+          cp -R handheld/data artifact/
+
+      - name: Upload binary + data
         uses: actions/upload-artifact@v4
         with:
           name: minecraftpe-macos
-          path: handheld/project/macos/minecraftpe
+          path: artifact/
 
   # ── Linux (x86_64) ────────────────────────────────────────────────────────
   linux:
@@ -44,11 +50,17 @@ jobs:
         working-directory: handheld/project/linux
         run: make -j$(nproc)
 
-      - name: Upload binary
+      - name: Stage playable artifact
+        run: |
+          mkdir -p artifact
+          cp handheld/project/linux/minecraftpe artifact/
+          cp -r handheld/data artifact/
+
+      - name: Upload binary + data
         uses: actions/upload-artifact@v4
         with:
           name: minecraftpe-linux
-          path: handheld/project/linux/minecraftpe
+          path: artifact/
 
   # ── Win32 (MSVC, x86) ─────────────────────────────────────────────────────
   # All required libraries (GLES emulator, GLEW, libpng, zlib) are pre-bundled
@@ -67,11 +79,15 @@ jobs:
         # Retarget from the original v100 (VS 2010) toolset to v143 (VS 2022)
         run: msbuild MinecraftWin32.sln /p:Configuration=Release /p:Platform=Win32 /p:PlatformToolset=v143 /m /nologo
 
-      - name: Copy runtime DLLs next to executables
+      - name: Copy runtime DLLs next to executable
         run: Copy-Item handheld\lib\bin\*.dll handheld\project\win32\Release\
         shell: pwsh
 
-      - name: Upload binaries + DLLs
+      - name: Copy game data next to executable
+        run: Copy-Item -Recurse handheld\data handheld\project\win32\Release\
+        shell: pwsh
+
+      - name: Upload binaries + DLLs + data
         uses: actions/upload-artifact@v4
         with:
           name: minecraftpe-win32

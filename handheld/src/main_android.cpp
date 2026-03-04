@@ -38,7 +38,7 @@ static void setupExternalPath(struct android_app* state, MAIN_CLASS* app)
     const char* str = env->GetStringUTFChars((jstring) pathString, NULL);
     app->externalStoragePath = str;
 	app->externalCacheStoragePath = str;
-    LOGI(str);
+    LOGI("%s", str);
 
     env->ReleaseStringUTFChars((jstring)pathString, str);
 

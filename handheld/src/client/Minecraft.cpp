@@ -841,9 +841,15 @@ void Minecraft::tickInput() {
 						_perfRenderer->debugFpsMeterKeyPress(key - '0');
 					}
 				}
+				if (key == Keyboard::KEY_E) {
+					screenChooser.setScreen(SCREEN_BLOCKSELECTION);
+				}
+				if (key == 250) {  // Tab (mapped in transformKey_win32)
+					releaseMouse();
+				}
 			#endif
 
-			#if defined(MACOS) || defined(RPI) || defined(LINUX)
+			#if defined(MACOS) || defined(RPI) || defined(LINUX) || defined(WIN32)
 				if (key == Keyboard::KEY_ESCAPE)
 					pauseGame(false);
 			#else
@@ -1253,8 +1259,8 @@ void Minecraft::_reloadInput() {
 #ifndef STANDALONE_SERVER
 	delete inputHolder;
 
-#if defined(MACOS) || defined(LINUX)
-	// On macOS/Linux always use keyboard + mouse regardless of useTouchScreen.
+#if defined(MACOS) || defined(LINUX) || defined(WIN32)
+	// On macOS/Linux/Win32 always use keyboard + mouse regardless of useTouchScreen.
 	// useTouchScreen stays true so ScreenChooser shows the touchscreen UI,
 	// but input is handled by keyboard/mouse, not the d-pad touch holder.
 	inputHolder = new CustomInputHolder(

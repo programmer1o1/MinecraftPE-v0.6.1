@@ -121,7 +121,7 @@ void Options::initDefaultValues() {
 	useMouseForDigging = true;
 #endif
 
-#if defined(MACOS) || defined(LINUX)
+#if defined(MACOS) || defined(LINUX) || defined(WIN32)
 	fancyGraphics = true;
 	useMouseForDigging = true;
 	viewDistance = 4;

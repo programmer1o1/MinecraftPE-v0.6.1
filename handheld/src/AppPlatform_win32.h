@@ -22,7 +22,7 @@ public:
     }
 
 	BinaryBlob readAssetFile(const std::string& filename) {
-		FILE* fp = fopen(("../../data/" + filename).c_str(), "r");
+		FILE* fp = fopen(("data/" + filename).c_str(), "r");
 		if (!fp)
 			return BinaryBlob();
 
@@ -50,7 +50,7 @@ public:
 	{
 		TextureData out;
 
-		std::string filename = textureFolder? "../../data/images/" + filename_
+		std::string filename = textureFolder? "data/images/" + filename_
 											: filename_;
 		std::ifstream source(filename.c_str(), std::ios::binary);
 

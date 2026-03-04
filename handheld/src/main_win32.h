@@ -32,6 +32,13 @@ static int getBits(int bits, int startBitInclusive, int endBitExclusive, int shi
 	return shiftTruncate? (sum >> startBitInclusive) : sum;
 }
 
+// Map Win32 virtual keys to the game's internal key codes.
+static unsigned char transformKey_win32(WPARAM wParam) {
+	if (wParam == VK_LSHIFT || wParam == VK_SHIFT) return Keyboard::KEY_LSHIFT;
+	if (wParam == VK_TAB) return 250;  // internal Tab code (same as macOS/Linux)
+	return (unsigned char)wParam;
+}
+
 void resizeWindow(HWND hWnd, int nWidth, int nHeight) {
    RECT rcClient, rcWindow;
    POINT ptDiff;
@@ -69,17 +76,13 @@ LRESULT WINAPI windowProc ( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
 	case WM_KEYDOWN: {
 		if (wParam == 33) toggleResolutions(hWnd, -1);
 		if (wParam == 34) toggleResolutions(hWnd, +1);
-		
-		//if (wParam == 'Q') ((Minecraft*)g_app)->leaveGame();
-		Keyboard::feed((unsigned char) wParam, 1); //(unsigned char) getBits(lParam, 16, 23, 1)
-
-		//char* lParamConv = (char*) &lParam;
-		//int convertResult =  ToUnicode(wParam, lParamConv[1], )
-
+		unsigned char k = transformKey_win32(wParam);
+		if (k) Keyboard::feed(k, 1);
 		return 0;
 	}
 	case WM_KEYUP: {
-		Keyboard::feed((unsigned char) wParam, 0); //(unsigned char) getBits(lParam, 16, 23, 1)
+		unsigned char k = transformKey_win32(wParam);
+		if (k) Keyboard::feed(k, 0);
 		return 0;
 	}
 	case WM_CHAR: {
@@ -107,9 +110,47 @@ LRESULT WINAPI windowProc ( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
 		break;
 	}
 	case WM_MOUSEMOVE: {
-		Mouse::feed( MouseAction::ACTION_MOVE, 0, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
-		Multitouch::feed(0, 0, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), 0);
+		if (!g_win32MouseCaptured) {
+			Mouse::feed(MouseAction::ACTION_MOVE, 0, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+			Multitouch::feed(0, 0, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), 0);
+		}
 		break;
+	}
+	case WM_MOUSEWHEEL: {
+		short delta = GET_WHEEL_DELTA_WPARAM(wParam);
+		Mouse::feed(MouseAction::ACTION_WHEEL, (delta != 0) ? 1 : 0,
+		            GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), 0, (short)(delta / 120));
+		break;
+	}
+	case WM_INPUT: {
+		if (g_win32MouseCaptured) {
+			UINT size = sizeof(RAWINPUT);
+			RAWINPUT raw;
+			if (GetRawInputData((HRAWINPUT)lParam, RID_INPUT, &raw, &size, sizeof(RAWINPUTHEADER)) != (UINT)-1) {
+				if (raw.header.dwType == RIM_TYPEMOUSE &&
+					!(raw.data.mouse.usFlags & MOUSE_MOVE_ABSOLUTE)) {
+					short dx = (short)raw.data.mouse.lLastX;
+					short dy = (short)raw.data.mouse.lLastY;
+					if (dx != 0 || dy != 0) {
+						RECT r;
+						GetClientRect(hWnd, &r);
+						Mouse::feed(MouseAction::ACTION_MOVE, 0,
+						            (short)((r.right - r.left) / 2),
+						            (short)((r.bottom - r.top) / 2),
+						            dx, dy);
+					}
+				}
+			}
+		}
+		return DefWindowProc(hWnd, uMsg, wParam, lParam);
+	}
+	case WM_KILLFOCUS: {
+		if (g_win32MouseCaptured) {
+			g_win32MouseCaptured = false;
+			ShowCursor(TRUE);
+			ClipCursor(NULL);
+		}
+		return DefWindowProc(hWnd, uMsg, wParam, lParam);
 	}
 	default:
 		if (uMsg == WM_NCDESTROY) g_running = false;
@@ -243,6 +284,16 @@ int main(void) {
 	ShowWindow(hwnd, SW_SHOW);
 	SetForegroundWindow(hwnd);
 	SetFocus(hwnd);
+	g_win32Hwnd = hwnd;
+	// Register for raw mouse input (enables in-game relative mouse look)
+	{
+		RAWINPUTDEVICE rid;
+		rid.usUsagePage = 0x01;  // HID_USAGE_PAGE_GENERIC
+		rid.usUsage     = 0x02;  // HID_USAGE_GENERIC_MOUSE
+		rid.dwFlags     = 0;
+		rid.hwndTarget  = hwnd;
+		RegisterRawInputDevices(&rid, 1, sizeof(rid));
+	}
 
 	// EGL init.
 	appContext.display = eglGetDisplay(GetDC(hwnd));
