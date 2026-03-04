@@ -25,7 +25,7 @@
 #include "platform/input/Mouse.h"
 #include "platform/input/Multitouch.h"
 
-#include "EGLConfigPrinter.h"
+#include "EglConfigPrinter.h"
 
 const int BroadcastPort = 9991;
 
