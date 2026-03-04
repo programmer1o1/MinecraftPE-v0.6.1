@@ -249,7 +249,9 @@ LOCAL_SRC_FILES := ../../../src/main.cpp \
 LOCAL_RAKNET_PATH := ../../../src/raknet
 LOCAL_SRC_FILES += $(patsubst $(LOCAL_PATH)/%,%,$(wildcard $(LOCAL_PATH)/$(LOCAL_RAKNET_PATH)/*.cpp))
 
-LOCAL_CFLAGS := -Wno-psabi -D_RAKNET_SUPPORT_FileOperations=0 $(LOCAL_CFLAGS)
+LOCAL_CFLAGS := -Wno-psabi -D_RAKNET_SUPPORT_FileOperations=0 \
+                $(if $(filter armeabi%,$(TARGET_ARCH_ABI)),-mno-unaligned-access -mfpu=vfp) \
+                $(LOCAL_CFLAGS)
 
 #LOCAL_CFLAGS := -DANDROID_PUBLISH -DDEMO_MODE $(LOCAL_CFLAGS)
 #LOCAL_CFLAGS := -DANDROID_PUBLISH $(LOCAL_CFLAGS)
@@ -261,8 +263,6 @@ LOCAL_LDLIBS    := -llog -landroid -lEGL -lGLESv1_CM -lOpenSLES
 LOCAL_STATIC_LIBRARIES := android_native_app_glue
 
 #LOCAL_CPP_FEATURES := exceptions
-
-TARGET_ARCH_ABI := armeabi-v7a
 
 include $(BUILD_SHARED_LIBRARY)
 

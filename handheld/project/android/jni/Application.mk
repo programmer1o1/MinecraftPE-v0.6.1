@@ -1,5 +1,9 @@
 APP_PLATFORM := android-9
-APP_STL := stlport_static
+# libc++ has cleaner static initialization than stlport; avoids SIGBUS on
+# Samsung kernels with strict alignment enforcement (stlport had unaligned
+# accesses in its global constructors).
+APP_STL := c++_static
 APP_OPTIM        := release
-APP_ABI          := armeabi-v7a
-#APP_ABI          := armeabi-v7a x86
+# Build both 32-bit (ARMv7) and 64-bit (ARM64) so modern Android devices
+# (which require 64-bit libraries) can install the APK.
+APP_ABI          := armeabi-v7a arm64-v8a
