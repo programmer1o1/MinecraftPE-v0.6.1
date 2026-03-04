@@ -131,7 +131,8 @@ engine_init_display( struct ENGINE* engine )
     //surface = eglCreateWindowSurface( display, config, engine->app->window, NULL );
     LOGI("6) Creating context\n");
 
-    context = eglCreateContext( display, config, NULL, NULL );
+    const EGLint contextAttribs[] = { 0x3098 /* EGL_CONTEXT_CLIENT_VERSION */, 1, EGL_NONE };
+    context = eglCreateContext( display, config, NULL, contextAttribs );
     LOGI("7) Make current\n");
 
     if( eglMakeCurrent( display, surface, surface, context ) == EGL_FALSE )
@@ -534,7 +535,7 @@ engine_handle_cmd( struct android_app* app, int32_t cmd )
 
         case APP_CMD_GAINED_FOCUS:
             //LOGI("gained-focus\n");
-            //engine->has_focus = 1;
+            engine->has_focus = 1;
             break;
 
         case APP_CMD_LOST_FOCUS:

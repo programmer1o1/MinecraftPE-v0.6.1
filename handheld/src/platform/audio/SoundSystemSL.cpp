@@ -22,6 +22,8 @@ std::vector<SLObjectItf> SoundSystemSL::toRemove;
 
 SoundSystemSL::SoundSystemSL()
 :	available(true),
+	engEngine(NULL),
+	objOutput(NULL),
 	listener(NULL),
 	numBuffersPlaying(0)
 {
@@ -30,11 +32,13 @@ SoundSystemSL::SoundSystemSL()
 
 SoundSystemSL::~SoundSystemSL()
 {
-	toRemoveMutex.unlock();
-	for (SoundList::iterator it = playingBuffers.begin(); it != playingBuffers.end(); ++it)
-		(**it)->Destroy(*it);
-	(*objOutput)->Destroy(objOutput);
-	
+	if (available) {
+		toRemoveMutex.unlock();
+		for (SoundList::iterator it = playingBuffers.begin(); it != playingBuffers.end(); ++it)
+			(**it)->Destroy(*it);
+		if (objOutput)
+			(*objOutput)->Destroy(objOutput);
+	}
 	if (SoundSystemSL::objEngine != 0) {
 	   (*SoundSystemSL::objEngine)->Destroy(SoundSystemSL::objEngine);
 	   SoundSystemSL::objEngine = 0;
@@ -60,7 +64,10 @@ void SoundSystemSL::init()
         (*SoundSystemSL::objEngine)->Destroy(SoundSystemSL::objEngine);
 
 	res = slCreateEngine( &SoundSystemSL::objEngine, 1, EngineOption, 0, NULL, NULL);
-	checkErr(res);
+	if (checkErr(res)) {
+		available = false;
+		return;
+	}
 
 	/* Realizing the SL Engine in synchronous mode. */
 	res = (*SoundSystemSL::objEngine)->Realize(SoundSystemSL::objEngine, SL_BOOLEAN_FALSE);
@@ -106,6 +113,8 @@ void SoundSystemSL::setListenerAngle( float deg )
 
 void SoundSystemSL::playAt( const SoundDesc& sound, float x, float y, float z, float volume, float pitch )
 {
+	if (!available) return;
+
 	removeStoppedSounds();
 
 	if (numBuffersPlaying >= MAX_BUFFERS_PLAYING)

@@ -118,12 +118,16 @@ android_main( struct android_app* state )
     appPlatform.instance = g_pActivity;
     pthread_mutex_unlock(&g_activityMutex);
 
+    LOGI("initConsts...\n");
     appPlatform.initConsts();
+    LOGI("initConsts done\n");
 
     //LOGI("socket-stuff\n");
     //socketDesc = initSocket(1999);
 
+    LOGI("Creating game object...\n");
     App* app = new MAIN_CLASS();
+    LOGI("Game object created\n");
 
     engine.userApp      = app;
     engine.app          = state;
