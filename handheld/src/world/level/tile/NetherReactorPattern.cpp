@@ -1,9 +1,9 @@
 #include "NetherReactorPattern.h"
 #include "Tile.h"
 NetherReactorPattern::NetherReactorPattern( ) {
-	const int goldId = Tile::goldBlock->id;
-	const int stoneId = Tile::stoneBrick->id;
-	const int netherCoreId = Tile::netherReactor->id;
+	const unsigned int goldId = (unsigned int)Tile::goldBlock->id;
+	const unsigned int stoneId = (unsigned int)Tile::stoneBrick->id;
+	const unsigned int netherCoreId = (unsigned int)Tile::netherReactor->id;
 	const unsigned int types[3][3][3] =
 	{
 		// Level 0
