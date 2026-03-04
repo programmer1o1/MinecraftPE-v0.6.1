@@ -170,7 +170,7 @@ engine_init_display( struct ENGINE* engine )
         engine->userApp->setSize(w, h);
     }
 
-	eglSwapInterval(eglGetCurrentDisplay(), 2);
+	eglSwapInterval(eglGetCurrentDisplay(), 1);
     engine->is_inited = true;
 
     return 0;
