@@ -204,10 +204,26 @@ public:
     int initConsts() {
         LOGI("initConsts: enter, vm=%p instance=%p", _vm, instance);
 
-        JVMAttacher ta(_vm);
-        LOGI("initConsts: JVMAttacher created");
-        JNIEnv* env = ta.getEnv();
-        LOGI("initConsts: env=%p", env);
+        // Do NOT use JVMAttacher here. The android_main thread (which calls
+        // initConsts) must stay permanently attached to the JVM for its
+        // lifetime. Attaching and then detaching causes ART/Scudo to abort
+        // with "misaligned pointer when deallocating address 0x1" during
+        // DetachCurrentThread cleanup on Android 13+.
+        // All subsequent JVMAttacher uses on this thread will see the thread
+        // is already attached (GetEnv returns JNI_OK), set _isAttached=false,
+        // and their destructors will be no-ops.
+        JNIEnv* env = NULL;
+        jint getEnvResult = _vm->GetEnv((void**)&env, JNI_VERSION_1_4);
+        LOGI("initConsts: GetEnv result=%d env=%p", getEnvResult, env);
+        if (!env) {
+            LOGI("initConsts: attaching thread permanently");
+            _vm->AttachCurrentThread(&env, NULL);
+            LOGI("initConsts: env after attach=%p", env);
+        }
+        if (!env) {
+            LOGI("initConsts: ERROR - env is null, bailing");
+            return -1;
+        }
 
         jmethodID fWidth = env->GetMethodID( _activityClass, "getScreenWidth", "()I");
         LOGI("initConsts: fWidth=%p", fWidth);
@@ -222,7 +238,13 @@ public:
         _screenHeight = env->CallIntMethod(instance, fHeight);
         LOGI("initConsts: screenHeight=%d", _screenHeight);
 
-        LOGI("initConsts: leaving scope, JVMAttacher destructor next");
+        if (env->ExceptionOccurred()) {
+            LOGI("initConsts: clearing exception");
+            env->ExceptionClear();
+        }
+
+        LOGI("initConsts: done");
+        return 0;
     }
 
     void tick() {
