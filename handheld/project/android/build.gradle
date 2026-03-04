@@ -1,0 +1,45 @@
+plugins {
+    id 'com.android.application' version '8.3.0'
+}
+
+android {
+    namespace 'com.mojang.minecraftpe'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId 'com.mojang.minecraftpe'
+        minSdk 14
+        targetSdk 21
+        versionCode 6006
+        versionName '0.6.0'
+    }
+
+    sourceSets {
+        main {
+            // Old Eclipse/Ant layout
+            java.srcDirs      = ['src']
+            java.excludes     = ['**/Minecraft_Verizon.java']  // requires Verizon SDK
+            res.srcDirs       = ['res']
+            assets.srcDirs    = ['assets']
+            manifest.srcFile    'AndroidManifest.xml'
+            // Pick up the pre-built .so from ndk-build output
+            jniLibs.srcDirs   = ['libs']
+        }
+    }
+
+    buildTypes {
+        debug {
+            debuggable true
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    lint {
+        abortOnError false
+        checkReleaseBuilds false
+    }
+}

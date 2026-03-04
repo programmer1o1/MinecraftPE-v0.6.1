@@ -114,16 +114,36 @@ jobs:
           unzip -q android-ndk-r16b-linux-x86_64.zip
           echo "NDK_ROOT=$PWD/android-ndk-r16b" >> $GITHUB_ENV
 
-      - name: Build
+      - name: Build native .so
         working-directory: handheld/project/android
         # NDK_MODULE_PATH must point to lib_projects so ndk-build can find the raknet/jni module
         run: NDK_MODULE_PATH=../lib_projects $NDK_ROOT/ndk-build -j$(nproc) NDK_PROJECT_PATH=. APP_BUILD_SCRIPT=jni/Android.mk
 
-      - name: Upload .so
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.5'
+
+      - name: Install Android SDK platform 34
+        run: |
+          yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager \
+            "platforms;android-34" "build-tools;34.0.0" 2>/dev/null | tail -1
+
+      - name: Build APK
+        working-directory: handheld/project/android
+        run: gradle assembleDebug
+
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: minecraftpe-android
-          path: handheld/project/android/libs/
+          path: handheld/project/android/build/outputs/apk/debug/*.apk
 
   # ── Dedicated server (Linux x86, 32-bit) ──────────────────────────────────
   # Uses the CMakeLists in dedicated_server/; requires gcc-multilib for -m32.
