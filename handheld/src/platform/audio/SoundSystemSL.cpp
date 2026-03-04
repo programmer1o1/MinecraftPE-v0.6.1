@@ -91,7 +91,7 @@ void SoundSystemSL::setListenerPos( float x, float y, float z )
 		return;
 	}
 
-	SLVec3D pos = {1000.0f * x, 1000.0f * y, 1000.0f * z};
+	SLVec3D pos = {(SLint32)(1000.0f * x), (SLint32)(1000.0f * y), (SLint32)(1000.0f * z)};
 	SLresult res = (*listener)->SetLocationCartesian(listener, &pos);
 	checkErr(res);
 }
@@ -115,10 +115,10 @@ void SoundSystemSL::playAt( const SoundDesc& sound, float x, float y, float z, f
 	SLDataLocator_AndroidSimpleBufferQueue uri = {SL_DATALOCATOR_ANDROIDSIMPLEBUFFERQUEUE, 2};
 	SLDataFormat_PCM mime = {
 		SL_DATAFORMAT_PCM,
-		sound.channels,
-		sound.frameRate * 1000,
-		sound.byteWidth << 3,
-		sound.byteWidth << 3,
+		(SLuint32)sound.channels,
+		(SLuint32)(sound.frameRate * 1000),
+		(SLuint32)(sound.byteWidth << 3),
+		(SLuint32)(sound.byteWidth << 3),
 		sound.channels==1?	SL_SPEAKER_FRONT_CENTER :
 		SL_SPEAKER_FRONT_LEFT | SL_SPEAKER_FRONT_RIGHT,
 		SL_BYTEORDER_LITTLEENDIAN
