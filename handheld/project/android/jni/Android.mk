@@ -249,7 +249,7 @@ LOCAL_SRC_FILES := ../../../src/main.cpp \
 LOCAL_RAKNET_PATH := ../../../src/raknet
 LOCAL_SRC_FILES += $(patsubst $(LOCAL_PATH)/%,%,$(wildcard $(LOCAL_PATH)/$(LOCAL_RAKNET_PATH)/*.cpp))
 
-LOCAL_CFLAGS := -Wno-psabi -D_RAKNET_SUPPORT_FileOperations=0 \
+LOCAL_CFLAGS := -Wno-psabi -Wno-c++11-narrowing -D_RAKNET_SUPPORT_FileOperations=0 \
                 $(if $(filter armeabi%,$(TARGET_ARCH_ABI)),-mno-unaligned-access -mfpu=vfp) \
                 $(LOCAL_CFLAGS)
 

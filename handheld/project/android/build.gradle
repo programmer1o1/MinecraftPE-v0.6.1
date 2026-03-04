@@ -9,7 +9,7 @@ android {
     defaultConfig {
         applicationId 'com.mojang.minecraftpe'
         minSdk 14
-        targetSdk 21
+        targetSdk 28
         versionCode 6006
         versionName '0.6.0'
     }

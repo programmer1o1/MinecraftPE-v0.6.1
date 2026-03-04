@@ -7,7 +7,7 @@
 
     <!-- This is the platform API where NativeActivity was introduced. -->
     <uses-sdk   android:minSdkVersion="9"
-                android:targetSdkVersion="9" />
+                android:targetSdkVersion="28" />
                 
     <!-- uses-feature android:name="android.hardware.touchscreen.multitouch" android:required="true"/ -->
 
@@ -20,6 +20,7 @@
     				>
 
         <activity   android:name="com.mojang.minecraftpe.MainActivity"
+                    android:exported="true"
                     android:label="@string/app_name_short"
                     android:configChanges="orientation|keyboardHidden"
                     android:screenOrientation="landscape"
