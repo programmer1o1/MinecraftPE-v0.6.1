@@ -66,6 +66,7 @@ public:
 
 	void feed(char actionButtonId, char buttonData, short x, short y);
 	void feed(char actionButtonId, char buttonData, short x, short y, short dx, short dy);
+	void feedEventOnly(char actionButtonId, char buttonData, short x, short y);
 
 private:
 	int _index;
@@ -104,6 +105,7 @@ public:
 
 	static void feed(char actionButtonId, char buttonData, short x, short y);
 	static void feed(char actionButtonId, char buttonData, short x, short y, short dx, short dy);
+	static void feedEventOnly(char actionButtonId, char buttonData, short x, short y);
 
 private:
 	static MouseDevice _instance;

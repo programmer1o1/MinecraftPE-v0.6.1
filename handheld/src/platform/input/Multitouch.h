@@ -124,12 +124,17 @@ public:
 		_inputs.push_back(MouseAction(actionButtonId, buttonData, x, y, pointerId));
 		g(pointerId).feed(actionButtonId, buttonData, x, y);
 
-		// On Android, mirror pointer 0 to legacy Mouse so GUI code (menus,
-		// sliders, scrolling lists, Screen::mouseClicked/Released) works.
-		// Other platforms feed Mouse directly alongside Multitouch.
+		// On Android, mirror touch events to legacy Mouse so GUI code
+		// (Screen::mouseClicked/Released, Slider, ScrollingPane) works.
+		// Pointer 0: full feed (updates button state, position, event queue).
+		// Other pointers: event-only feed (queue only, no state/position change)
+		//   so secondary taps appear in Mouse::next() with correct coordinates
+		//   but don't corrupt isButtonDown() or getX()/getY() for drag code.
 #ifdef ANDROID
 		if (pointerId == 0) {
 			Mouse::feed(actionButtonId, buttonData, x, y);
+		} else if (actionButtonId != MouseAction::ACTION_MOVE) {
+			Mouse::feedEventOnly(actionButtonId, buttonData, x, y);
 		}
 #endif
 

@@ -165,5 +165,13 @@ void Mouse::feed(char actionButtonId, char buttonData, short x, short y, short d
 }
 
 
+void MouseDevice::feedEventOnly(char actionButtonId, char buttonData, short x, short y) {
+	_inputs.push_back(MouseAction(actionButtonId, buttonData, x, y, 0, 0, 0));
+}
+
+void Mouse::feedEventOnly(char actionButtonId, char buttonData, short x, short y) {
+	_instance.feedEventOnly(actionButtonId, buttonData, x, y);
+}
+
 MouseDevice Mouse::_instance;
 

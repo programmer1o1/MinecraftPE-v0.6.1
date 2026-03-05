@@ -659,7 +659,7 @@ void Minecraft::tickInput() {
 #endif
 
 		if (allowGuiClicks && e.action == MouseAction::ACTION_LEFT && e.data == MouseAction::DATA_DOWN) {
-			gui.handleClick(MouseAction::ACTION_LEFT, Mouse::getX(), Mouse::getY());
+			gui.handleClick(MouseAction::ACTION_LEFT, e.x, e.y);
 		}
 
 		if (e.action == MouseAction::ACTION_WHEEL) {
