@@ -106,6 +106,14 @@ void MouseDevice::feed(char actionButtonId, char buttonData, short x, short y, s
 
 	_inputs.push_back(MouseAction(actionButtonId, buttonData, x, y, dx, dy, 0));
 
+	// Always update position — button events (DOWN/UP) carry valid coordinates.
+	// Without this, getX()/getY() returns stale position from the last MOVE,
+	// causing touches to register at the wrong location on touchscreens.
+	_xOld = _x;
+	_yOld = _y;
+	_x = x;
+	_y = y;
+
 	if (actionButtonId != MouseAction::ACTION_MOVE) {
 		_buttonStates[actionButtonId] = buttonData;
 
@@ -122,11 +130,6 @@ void MouseDevice::feed(char actionButtonId, char buttonData, short x, short y, s
 			_firstMovementType = 1;
 		else
 			_firstMovementType = 0;
-
-		_xOld = _x;
-		_yOld = _y;
-		_x = x;
-		_y = y;
 	}
 }
 
