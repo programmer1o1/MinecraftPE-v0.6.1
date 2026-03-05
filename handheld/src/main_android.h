@@ -432,30 +432,26 @@ handle_touch_input( struct android_app* app, AInputEvent* event )
     int fullAction  = AMotionEvent_getAction( event );
     int nAction     = AMOTION_EVENT_ACTION_MASK & fullAction;
     int pointerIndex = (fullAction & AMOTION_EVENT_ACTION_POINTER_INDEX_MASK) >> AMOTION_EVENT_ACTION_POINTER_INDEX_SHIFT;
-    int pointerId = AMotionEvent_getPointerId(event, pointerIndex);
-    float x = AMotionEvent_getX(event, pointerIndex);
-    float y = AMotionEvent_getY(event, pointerIndex);
 
+    // Modern Android touchscreen input: use Multitouch exclusively.
+    // All finger tracking is handled by Multitouch; no legacy Mouse needed.
     switch (nAction) {
         case AMOTION_EVENT_ACTION_DOWN:
-            // First finger down: update primary Mouse so single-touch code sees it.
-            mouseDown(1, x, y);
+        case AMOTION_EVENT_ACTION_POINTER_DOWN: {
+            int pointerId = AMotionEvent_getPointerId(event, pointerIndex);
+            float x = AMotionEvent_getX(event, pointerIndex);
+            float y = AMotionEvent_getY(event, pointerIndex);
             Multitouch::feed(1, 1, x, y, pointerId);
             break;
-        case AMOTION_EVENT_ACTION_POINTER_DOWN:
-            // Secondary finger down: only feed Multitouch; do NOT touch Mouse so
-            // pointer 0's position is not corrupted before the next MOVE event.
-            Multitouch::feed(1, 1, x, y, pointerId);
-            break;
+        }
         case AMOTION_EVENT_ACTION_UP:
-            // Last finger up: update Mouse.
-            mouseUp(1, x, y);
+        case AMOTION_EVENT_ACTION_POINTER_UP: {
+            int pointerId = AMotionEvent_getPointerId(event, pointerIndex);
+            float x = AMotionEvent_getX(event, pointerIndex);
+            float y = AMotionEvent_getY(event, pointerIndex);
             Multitouch::feed(1, 0, x, y, pointerId);
             break;
-        case AMOTION_EVENT_ACTION_POINTER_UP:
-            // Secondary finger up: only feed Multitouch.
-            Multitouch::feed(1, 0, x, y, pointerId);
-            break;
+        }
         case AMOTION_EVENT_ACTION_CANCEL: {
             // System cancelled the gesture (e.g. dialog opened, focus lost).
             // Release all currently-down pointers so the game doesn't get stuck.
@@ -464,8 +460,6 @@ handle_touch_input( struct android_app* app, AInputEvent* event )
                 int pp = AMotionEvent_getPointerId(event, i);
                 float cx = AMotionEvent_getX(event, i);
                 float cy = AMotionEvent_getY(event, i);
-                // Only update primary Mouse for pointer 0.
-                if (i == 0) mouseUp(1, cx, cy);
                 Multitouch::feed(1, 0, cx, cy, pp);
             }
             break;
@@ -476,10 +470,6 @@ handle_touch_input( struct android_app* app, AInputEvent* event )
                 int pp = AMotionEvent_getPointerId(event, i);
                 float xx = AMotionEvent_getX(event, i);
                 float yy = AMotionEvent_getY(event, i);
-                // Only update primary mouse position for pointer 0 to avoid
-                // jitter when a second finger is also moving.
-                if (i == 0)
-                    mouseMove(xx, yy);
                 Multitouch::feed(0, 0, xx, yy, pp);
             }
             break;

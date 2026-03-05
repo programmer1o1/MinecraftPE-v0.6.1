@@ -65,6 +65,17 @@ public class MainActivity extends NativeActivity {
     	getOptionStrings(); // Updates settings
         setVolumeControlStream(AudioManager.STREAM_MUSIC);
         super.onCreate(savedInstanceState);
+
+        // Hide navigation bar and status bar for immersive fullscreen
+        int flags = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_FULLSCREEN;
+        if (Build.VERSION.SDK_INT >= 19) {
+            flags |= View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
+        }
+        if (Build.VERSION.SDK_INT >= 16) {
+            flags |= View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN;
+        }
+        getWindow().getDecorView().setSystemUiVisibility(flags);
+
         requestStoragePermissions();
         nativeRegisterThis();
     }
@@ -162,9 +173,18 @@ public class MainActivity extends NativeActivity {
 
     @Override
     public void onWindowFocusChanged(boolean hasFocus) {
-    	// TODO Auto-generated method stub
-    	//System.out.println("Focus has changed. Has Focus? " + hasFocus);
     	super.onWindowFocusChanged(hasFocus);
+    	// Re-apply immersive fullscreen mode when focus is regained
+    	if (hasFocus) {
+    		int flags = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_FULLSCREEN;
+    		if (Build.VERSION.SDK_INT >= 19) {
+    			flags |= View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
+    		}
+    		if (Build.VERSION.SDK_INT >= 16) {
+    			flags |= View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN;
+    		}
+    		getWindow().getDecorView().setSystemUiVisibility(flags);
+    	}
     }
 
     @Override
@@ -266,14 +286,30 @@ public class MainActivity extends NativeActivity {
     }
 
     public int getScreenWidth() {
+    	Display display = getWindowManager().getDefaultDisplay();
     	DisplayMetrics metrics = new DisplayMetrics();
-    	getWindowManager().getDefaultDisplay().getRealMetrics(metrics);
-    	return Math.max(metrics.widthPixels, metrics.heightPixels);
+    	display.getRealMetrics(metrics);
+    	int width = Math.max(metrics.widthPixels, metrics.heightPixels);
+
+    	// Account for system UI insets if available (API 20+)
+    	if (Build.VERSION.SDK_INT >= 20 && getWindow().getDecorView().getRootWindowInsets() != null) {
+    		width -= (getWindow().getDecorView().getRootWindowInsets().getStableInsetLeft() +
+    				  getWindow().getDecorView().getRootWindowInsets().getStableInsetRight());
+    	}
+    	return Math.max(width, 1);
     }
     public int getScreenHeight() {
+    	Display display = getWindowManager().getDefaultDisplay();
     	DisplayMetrics metrics = new DisplayMetrics();
-    	getWindowManager().getDefaultDisplay().getRealMetrics(metrics);
-    	return Math.min(metrics.widthPixels, metrics.heightPixels);
+    	display.getRealMetrics(metrics);
+    	int height = Math.min(metrics.widthPixels, metrics.heightPixels);
+
+    	// Account for system UI insets if available (API 20+)
+    	if (Build.VERSION.SDK_INT >= 20 && getWindow().getDecorView().getRootWindowInsets() != null) {
+    		height -= (getWindow().getDecorView().getRootWindowInsets().getStableInsetTop() +
+    				   getWindow().getDecorView().getRootWindowInsets().getStableInsetBottom());
+    	}
+    	return Math.max(height, 1);
     }
     public float getPixelsPerMillimeter() {
     	 DisplayMetrics metrics = new DisplayMetrics();
