@@ -438,13 +438,22 @@ handle_touch_input( struct android_app* app, AInputEvent* event )
 
     switch (nAction) {
         case AMOTION_EVENT_ACTION_DOWN:
-        case AMOTION_EVENT_ACTION_POINTER_DOWN:
+            // First finger down: update primary Mouse so single-touch code sees it.
             mouseDown(1, x, y);
             Multitouch::feed(1, 1, x, y, pointerId);
             break;
+        case AMOTION_EVENT_ACTION_POINTER_DOWN:
+            // Secondary finger down: only feed Multitouch; do NOT touch Mouse so
+            // pointer 0's position is not corrupted before the next MOVE event.
+            Multitouch::feed(1, 1, x, y, pointerId);
+            break;
         case AMOTION_EVENT_ACTION_UP:
-        case AMOTION_EVENT_ACTION_POINTER_UP:
+            // Last finger up: update Mouse.
             mouseUp(1, x, y);
+            Multitouch::feed(1, 0, x, y, pointerId);
+            break;
+        case AMOTION_EVENT_ACTION_POINTER_UP:
+            // Secondary finger up: only feed Multitouch.
             Multitouch::feed(1, 0, x, y, pointerId);
             break;
         case AMOTION_EVENT_ACTION_CANCEL: {
@@ -455,7 +464,8 @@ handle_touch_input( struct android_app* app, AInputEvent* event )
                 int pp = AMotionEvent_getPointerId(event, i);
                 float cx = AMotionEvent_getX(event, i);
                 float cy = AMotionEvent_getY(event, i);
-                mouseUp(1, cx, cy);
+                // Only update primary Mouse for pointer 0.
+                if (i == 0) mouseUp(1, cx, cy);
                 Multitouch::feed(1, 0, cx, cy, pp);
             }
             break;
