@@ -429,42 +429,53 @@ handle_touch_input( struct android_app* app, AInputEvent* event )
 	if (nSourceId == AINPUT_SOURCE_TOUCHPAD)
 		return 0;
 
-    struct ENGINE* engine = (struct ENGINE*)app->userData;
-
     int fullAction  = AMotionEvent_getAction( event );
     int nAction     = AMOTION_EVENT_ACTION_MASK & fullAction;
     int pointerIndex = (fullAction & AMOTION_EVENT_ACTION_POINTER_INDEX_MASK) >> AMOTION_EVENT_ACTION_POINTER_INDEX_SHIFT;
     int pointerId = AMotionEvent_getPointerId(event, pointerIndex);
-    int x = (int)AMotionEvent_getX(event, pointerIndex);
-    int y = (int)AMotionEvent_getY(event, pointerIndex);
-
-	//LOGI("xy:\t%d, %d\n", x, y);
+    float x = AMotionEvent_getX(event, pointerIndex);
+    float y = AMotionEvent_getY(event, pointerIndex);
 
     switch (nAction) {
-        case AMOTION_EVENT_ACTION_POINTER_DOWN:
         case AMOTION_EVENT_ACTION_DOWN:
+        case AMOTION_EVENT_ACTION_POINTER_DOWN:
             mouseDown(1, x, y);
             Multitouch::feed(1, 1, x, y, pointerId);
             break;
-        case AMOTION_EVENT_ACTION_POINTER_UP:
         case AMOTION_EVENT_ACTION_UP:
+        case AMOTION_EVENT_ACTION_POINTER_UP:
             mouseUp(1, x, y);
             Multitouch::feed(1, 0, x, y, pointerId);
             break;
-        case AMOTION_EVENT_ACTION_MOVE:
-    		int pcount = AMotionEvent_getPointerCount(event);
-    		for (int i = 0; i < pcount; ++i) {
-    			int pp = AMotionEvent_getPointerId(event, i); // @attn wtf?
-    			float xx = AMotionEvent_getX(event, i);
-    			float yy = AMotionEvent_getY(event, i);
-        		//	System.err.println("   " + p + " @ " + x + ", " + y);
-                //LOGI("> %.2f, %.2f\n", xx, yy);
-                mouseMove(xx, yy);
-                Multitouch::feed(0, 0, xx, yy, pp);
-    		}
+        case AMOTION_EVENT_ACTION_CANCEL: {
+            // System cancelled the gesture (e.g. dialog opened, focus lost).
+            // Release all currently-down pointers so the game doesn't get stuck.
+            int pcount = AMotionEvent_getPointerCount(event);
+            for (int i = 0; i < pcount; ++i) {
+                int pp = AMotionEvent_getPointerId(event, i);
+                float cx = AMotionEvent_getX(event, i);
+                float cy = AMotionEvent_getY(event, i);
+                mouseUp(1, cx, cy);
+                Multitouch::feed(1, 0, cx, cy, pp);
+            }
             break;
+        }
+        case AMOTION_EVENT_ACTION_MOVE: {
+            int pcount = AMotionEvent_getPointerCount(event);
+            for (int i = 0; i < pcount; ++i) {
+                int pp = AMotionEvent_getPointerId(event, i);
+                float xx = AMotionEvent_getX(event, i);
+                float yy = AMotionEvent_getY(event, i);
+                // Only update primary mouse position for pointer 0 to avoid
+                // jitter when a second finger is also moving.
+                if (i == 0)
+                    mouseMove(xx, yy);
+                Multitouch::feed(0, 0, xx, yy, pp);
+            }
+            break;
+        }
     }
-    return 0;
+    return 1;
 }
 
 /**
