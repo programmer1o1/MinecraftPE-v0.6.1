@@ -116,9 +116,7 @@ public class MainActivity extends NativeActivity {
     static public boolean isPowerVR() { return _isPowerVr; }
     
     public boolean supportsTouchscreen() {
-    	return isXperiaPlay();
-    	//if (isXperiaPlay()) return false;
-    	//return true;
+    	return !isXperiaPlay();
     }
 
 	static public boolean isXperiaPlay() {
@@ -465,8 +463,6 @@ public class MainActivity extends NativeActivity {
 	    for (String s : _userInputText) System.out.println("js: " + s);
 
 	    _userInputStatus = 1;
-	    InputMethodManager inputManager = (InputMethodManager)getSystemService("input_method");
-        boolean result = inputManager.showSoftInput(this.getCurrentFocus(), InputMethodManager.SHOW_IMPLICIT);
 	}
     
     protected void onStart() {
