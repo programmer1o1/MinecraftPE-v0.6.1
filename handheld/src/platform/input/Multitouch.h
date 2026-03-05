@@ -124,6 +124,15 @@ public:
 		_inputs.push_back(MouseAction(actionButtonId, buttonData, x, y, pointerId));
 		g(pointerId).feed(actionButtonId, buttonData, x, y);
 
+		// On Android, mirror pointer 0 to legacy Mouse so GUI code (menus,
+		// sliders, scrolling lists, Screen::mouseClicked/Released) works.
+		// Other platforms feed Mouse directly alongside Multitouch.
+#ifdef ANDROID
+		if (pointerId == 0) {
+			Mouse::feed(actionButtonId, buttonData, x, y);
+		}
+#endif
+
 		if (actionButtonId > 0) {
 			if (buttonData == MouseAction::DATA_DOWN) {
 				_wasPressed[pointerId] = true;

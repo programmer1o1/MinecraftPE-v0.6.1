@@ -433,8 +433,8 @@ handle_touch_input( struct android_app* app, AInputEvent* event )
     int nAction     = AMOTION_EVENT_ACTION_MASK & fullAction;
     int pointerIndex = (fullAction & AMOTION_EVENT_ACTION_POINTER_INDEX_MASK) >> AMOTION_EVENT_ACTION_POINTER_INDEX_SHIFT;
 
-    // Modern Android touchscreen input: use Multitouch exclusively.
-    // All finger tracking is handled by Multitouch; no legacy Mouse needed.
+    // All touch input goes through Multitouch exclusively.
+    // Multitouch::feed() auto-mirrors pointer 0 to legacy Mouse for GUI compat.
     switch (nAction) {
         case AMOTION_EVENT_ACTION_DOWN:
         case AMOTION_EVENT_ACTION_POINTER_DOWN: {
@@ -453,8 +453,6 @@ handle_touch_input( struct android_app* app, AInputEvent* event )
             break;
         }
         case AMOTION_EVENT_ACTION_CANCEL: {
-            // System cancelled the gesture (e.g. dialog opened, focus lost).
-            // Release all currently-down pointers so the game doesn't get stuck.
             int pcount = AMotionEvent_getPointerCount(event);
             for (int i = 0; i < pcount; ++i) {
                 int pp = AMotionEvent_getPointerId(event, i);
