@@ -44,6 +44,9 @@
     #define glOrthof(a,b,c,d,e,f)   glOrtho(a,b,c,d,e,f)
     #define glClearDepthf(x)        glClearDepth(x)
     #define glDepthRangef(a,b)      glDepthRange(a,b)
+#elif defined(STANDALONE_SERVER)
+    // Dedicated server: no graphics context at all
+    // (nothing to include)
 #else
     // Uglyness to fix redeclaration issues
     #ifdef WIN32
@@ -60,6 +63,11 @@
 	#define glDepthRangef(a,b)      glDepthRange(a,b)
 #endif
 
+
+#ifdef STANDALONE_SERVER
+// Server build: no OpenGL at all; provide a no-op GLERR so shared headers compile
+#define GLERR(x) ((void)0)
+#else // !STANDALONE_SERVER
 
 #define GLERRDEBUG 1
 #if GLERRDEBUG
@@ -202,7 +210,7 @@ int glhUnProjectf(	float winx, float winy, float winz,
 	#define glGetProcAddress(a) ((void*)(0))
 #endif
 
-
+#endif // !STANDALONE_SERVER
 
 
 #endif /*NET_MINECRAFT_CLIENT_RENDERER__gles_H__ */

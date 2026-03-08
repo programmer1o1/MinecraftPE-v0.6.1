@@ -154,7 +154,7 @@ android_main( struct android_app* state )
         int events;
         struct android_poll_source* source;
 		
-        while( (ident = ALooper_pollAll( 0, NULL, &events, (void**)&source) ) >= 0 )
+        while( (ident = ALooper_pollOnce( 0, NULL, &events, (void**)&source) ) >= 0 )
         {
             // Process this event.
             // This will call the function pointer android_app::onInputEvent() which in our case is

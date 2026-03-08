@@ -95,6 +95,7 @@ GAME_SOURCES := \
 	$(SRCDIR)/client/gui/components/OptionsItem.cpp \
 	$(SRCDIR)/client/gui/components/OptionsGroup.cpp \
 	$(SRCDIR)/client/gui/components/OptionsPane.cpp \
+	$(SRCDIR)/client/gui/components/TextBox.cpp \
 	$(SRCDIR)/client/gui/Font.cpp \
 	$(SRCDIR)/client/gui/Gui.cpp \
 	$(SRCDIR)/client/gui/GuiComponent.cpp \

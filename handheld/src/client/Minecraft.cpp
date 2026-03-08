@@ -1231,7 +1231,7 @@ void Minecraft::setSize(int w, int h) {
 
 	// Apply user GUI scale override: 0=auto, 1=small (0.5x), 2=normal (1x), 3=large (1.5x)
 	switch (options.guiScale) {
-		case 1: Gui::GuiScale = std::max(1.0f, Gui::GuiScale * 0.5f); break;
+		case 1: { float s = Gui::GuiScale * 0.5f; if (s < 1.0f) s = 1.0f; Gui::GuiScale = s; } break;
 		case 2: break; // normal = auto
 		case 3: Gui::GuiScale = Gui::GuiScale * 1.5f; break;
 		default: break; // 0 = auto
