@@ -6,6 +6,12 @@
 #include "RenderChunk.h"
 #include "../../world/phys/AABB.h"
 
+#if defined(MACOS) || defined(LINUX) || defined(WIN32)
+#include <vector>
+#include <cstdint>
+#include <atomic>
+#endif
+
 class Level;
 class Entity;
 class Culler;
@@ -21,6 +27,13 @@ public:
     void setPos(int x, int y, int z);
 
 	void rebuild();
+#if defined(MACOS) || defined(LINUX) || defined(WIN32)
+	// Background-thread tessellation step: fills _cpuMesh[]/cpuVertexCount[]
+	// using the provided Tesselator (not the global singleton).
+	void rebuildCPU(Tesselator& t);
+	// Main-thread GPU upload step: uploads _cpuMesh[] to OpenGL VBOs.
+	void uploadGPU();
+#endif
 	void setDirty();
 	void setClean();
 	bool isDirty();
@@ -43,6 +56,7 @@ public:
 
 private:
 	void translateToPos();
+	void rebuildImpl(Tesselator& t, bool cpuOnly);
 public:
 	Level* level;
 
@@ -59,9 +73,21 @@ public:
 	bool occlusion_visible;
 	bool occlusion_querying;
 	int occlusion_id;
+	bool queued; // true while this chunk is in LevelRenderer::dirtyChunks
 	bool skyLit;
 
 	RenderChunk renderChunk[NumLayers];
+
+#if defined(MACOS) || defined(LINUX) || defined(WIN32)
+	// CPU-side mesh buffers written by rebuildCPU(), consumed by uploadGPU().
+	std::vector<uint8_t> _cpuMesh[NumLayers];
+	int _cpuVertexCount[NumLayers];
+	// Set to true by rebuildCPU() when data is ready, cleared by uploadGPU().
+	std::atomic<bool> _cpuMeshReady;
+	// True while rebuildCPU() or uploadGPU() are executing (prevents double-queue).
+	std::atomic<bool> _inFlight;
+#endif
+
 private:
 	Tesselator& t;
 	int lists;

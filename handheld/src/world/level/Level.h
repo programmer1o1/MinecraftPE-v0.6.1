@@ -271,6 +271,7 @@ public:
      */
 	/*virtual*/ void setInitialSpawn();
 	bool inRange(int x, int y, int z);
+	bool isInfinite() const { return levelData.isInfinite(); }
 protected:
 	void setZombieAi(std::vector<Zombie*>& zombies);
 	/*virtual*/ void entityAdded(Entity* e);

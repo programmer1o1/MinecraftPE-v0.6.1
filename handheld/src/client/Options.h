@@ -48,6 +48,7 @@ public:
 		static const Option DESTROY_VIBRATION;
 
 		static const Option PIXELS_PER_MILLIMETER;
+		static const Option FOV;
 
 		/*
         static Option* getItem(int id) {
@@ -97,11 +98,13 @@ private:
 	static const float SENSITIVITY_MAX_VALUE;
 	static const float PIXELS_PER_MILLIMETER_MIN_VALUE;
 	static const float PIXELS_PER_MILLIMETER_MAX_VALUE;
+	static const float FOV_MIN_VALUE;
+	static const float FOV_MAX_VALUE;
+	static const int DIFFICULY_LEVELS[];
+public:
     static const char* RENDER_DISTANCE_NAMES[];
     static const char* DIFFICULTY_NAMES[];
     static const char* GUI_SCALE[];
-	static const int DIFFICULY_LEVELS[];
-public:
 	static bool debugGl;
 
 	float music;
@@ -160,6 +163,7 @@ public:
 	bool isJoyTouchArea;
 	bool useTouchScreen;
 	float pixelsPerMillimeter;
+	float fieldOfView;
     Options(Minecraft* minecraft, const std::string& workingDirectory)
 	:	minecraft(minecraft)
 	{
@@ -204,6 +208,8 @@ public:
             sensitivity = value;
 		} else if (item == &Option::PIXELS_PER_MILLIMETER) {
 			 pixelsPerMillimeter = value;
+		} else if (item == &Option::FOV) {
+			fieldOfView = value;
 		}
 		notifyOptionUpdate(item, value);
 		save();
@@ -215,7 +221,7 @@ public:
 				difficulty = DIFFICULY_LEVELS[1];
 			}
 		} else if (item == &Option::RENDER_DISTANCE) {
-			viewDistance = value & 3;
+			viewDistance = value & 7;
 		} else if (item == &Option::GUI_SCALE) {
 			guiScale = value & 3;
 		} else if (item == &Option::GRAPHICS) {
@@ -227,7 +233,7 @@ public:
 
     void toggle(const Option* option, int dir) {
         if (option == &Option::INVERT_MOUSE)	invertYMouse = !invertYMouse;
-        if (option == &Option::RENDER_DISTANCE) viewDistance = (viewDistance + dir) & 3;
+        if (option == &Option::RENDER_DISTANCE) viewDistance = (viewDistance + dir) & 7;
         if (option == &Option::GUI_SCALE)		guiScale = (guiScale + dir) & 3;
         if (option == &Option::VIEW_BOBBING)	bobView = !bobView;
 		if (option == &Option::THIRD_PERSON)	thirdPersonView = !thirdPersonView;
@@ -261,7 +267,7 @@ public:
         }
         if (option == &Option::AMBIENT_OCCLUSION) {
             ambientOcclusion = !ambientOcclusion;
-            //minecraft->levelRenderer.allChanged();
+            syncAmbientOcclusion();
         }
 		if (option->isBoolean()) {
 			notifyOptionUpdate(option, getBooleanValue(option));
@@ -284,6 +290,7 @@ public:
         if (item == &Option::SOUND) return sound;
         if (item == &Option::SENSITIVITY) return sensitivity;
 		if (item == &Option::PIXELS_PER_MILLIMETER) return pixelsPerMillimeter;
+		if (item == &Option::FOV) return fieldOfView;
         return 0;
     }
 
@@ -320,6 +327,7 @@ public:
 		if (item == &Option::SOUND) return SOUND_MIN_VALUE;
 		if (item == &Option::SENSITIVITY) return SENSITIVITY_MIN_VALUE;
 		if (item == &Option::PIXELS_PER_MILLIMETER) return PIXELS_PER_MILLIMETER_MIN_VALUE;
+		if (item == &Option::FOV) return FOV_MIN_VALUE;
 		return 0;
 	}
 
@@ -328,14 +336,17 @@ public:
 		if (item == &Option::SOUND) return SOUND_MAX_VALUE;
 		if (item == &Option::SENSITIVITY) return SENSITIVITY_MAX_VALUE;
 		if (item == &Option::PIXELS_PER_MILLIMETER) return PIXELS_PER_MILLIMETER_MAX_VALUE;
+		if (item == &Option::FOV) return FOV_MAX_VALUE;
 		return 1.0f;
-	} 
+	}
 
 	std::string getMessage(const Option* item);
 
+	void setSettingsPath(const std::string& path);
 	void update();
     void load();
     void save();
+    void syncAmbientOcclusion();
 	void addOptionToSaveOutput(StringVector& stringVector, std::string name, bool boolValue);
 	void addOptionToSaveOutput(StringVector& stringVector, std::string name, float floatValue);
 	void addOptionToSaveOutput(StringVector& stringVector, std::string name, int intValue);

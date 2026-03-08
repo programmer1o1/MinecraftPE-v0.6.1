@@ -71,6 +71,9 @@ public:
 	void		setGameType(int type);
 	bool		getSpawnMobs() const;
 	void		setSpawnMobs(bool doSpawn);
+	int			getWorldType() const;
+	void		setWorldType(int type);
+	bool		isInfinite() const;
 
 public:
 	PlayerData playerData;
@@ -89,6 +92,7 @@ private:
 	int gameType;
 	int storageVersion;
 	bool spawnMobs;
+	int worldType;
 	//@note: This version is never written or loaded to disk. The only purpose
 	//       is to use it in the level generator on server and clients.
 	int generatorVersion;

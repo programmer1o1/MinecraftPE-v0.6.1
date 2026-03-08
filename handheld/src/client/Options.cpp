@@ -1,6 +1,7 @@
 #include "Options.h"
 #include "OptionStrings.h"
 #include "Minecraft.h"
+#include "renderer/LevelRenderer.h"
 #include "../platform/log.h"
 #include "../world/Difficulty.h"
 #include <sstream>
@@ -28,6 +29,7 @@ void Options::initDefaultValues() {
 	music = 1;
 	sound = 1;
 	sensitivity = 0.5f;
+	fieldOfView = 70.0f;
 	invertYMouse = false;
 	viewDistance = 2;
 	bobView = true;
@@ -124,7 +126,7 @@ void Options::initDefaultValues() {
 #if defined(MACOS) || defined(LINUX) || defined(WIN32)
 	fancyGraphics = true;
 	useMouseForDigging = true;
-	viewDistance = 4;
+	viewDistance = 0; // 0=far, 1=normal, 2=short, 3=tiny
 	keyUp.key    = Keyboard::KEY_W;
 	keyDown.key  = Keyboard::KEY_S;
 	keyLeft.key  = Keyboard::KEY_A;
@@ -154,7 +156,8 @@ const Options::Option
 	Options::Option::USE_TOUCHSCREEN	 (16, "options.usetouchscreen", false, true),
 	Options::Option::USE_TOUCH_JOYPAD	 (17, "options.usetouchpad", false, true),
 	Options::Option::DESTROY_VIBRATION   (18, "options.destroyvibration", false, true),
-	Options::Option::PIXELS_PER_MILLIMETER(19, "options.pixelspermilimeter", true, false);
+	Options::Option::PIXELS_PER_MILLIMETER(19, "options.pixelspermilimeter", true, false),
+	Options::Option::FOV                  (20, "options.fov",               true, false);
 
 /* private */
 const float Options::SOUND_MIN_VALUE = 0.0f;
@@ -165,6 +168,8 @@ const float Options::SENSITIVITY_MIN_VALUE = 0.0f;
 const float Options::SENSITIVITY_MAX_VALUE = 1.0f;
 const float Options::PIXELS_PER_MILLIMETER_MIN_VALUE = 3.0f;
 const float Options::PIXELS_PER_MILLIMETER_MAX_VALUE = 4.0f;
+const float Options::FOV_MIN_VALUE = 30.0f;
+const float Options::FOV_MAX_VALUE = 110.0f;
 const int Options::DIFFICULY_LEVELS[] = {
 	0,
 	2
@@ -175,7 +180,11 @@ const char* Options::RENDER_DISTANCE_NAMES[] = {
 	"options.renderDistance.far",
 	"options.renderDistance.normal",
 	"options.renderDistance.short",
-	"options.renderDistance.tiny"
+	"options.renderDistance.tiny",
+	"options.renderDistance.vfar",
+	"options.renderDistance.extreme",
+	"options.renderDistance.ultra",
+	"options.renderDistance.max"
 };
 
 /*private*/
@@ -194,9 +203,12 @@ const char* Options::GUI_SCALE[] = {
 	"options.guiScale.large"
 };
 
+void Options::setSettingsPath(const std::string& path) {
+	optionsFile.setSettingsPath(path);
+}
+
 void Options::update()
 {
-	viewDistance = 2;
 	StringVector optionStrings = optionsFile.getOptionStrings();
 	for (unsigned int i = 0; i < optionStrings.size();) {
 		std::string key;
@@ -267,9 +279,17 @@ void Options::update()
 		if (key == OptionStrings::Graphics_ViewBobbing) {
 			readBool(value, bobView);
 		}
+		if (key == OptionStrings::Graphics_FOV) {
+			float fov;
+			if (readFloat(value, fov)) {
+				if (fov < FOV_MIN_VALUE) fov = FOV_MIN_VALUE;
+				if (fov > FOV_MAX_VALUE) fov = FOV_MAX_VALUE;
+				fieldOfView = fov;
+			}
+		}
 		if (key == OptionStrings::Graphics_RenderDistance) {
 			readInt(value, viewDistance);
-			viewDistance &= 3;
+			viewDistance &= 7;
 		}
 		if (key == OptionStrings::Graphics_GuiScale) {
 			readInt(value, guiScale);
@@ -306,6 +326,13 @@ void Options::update()
 #endif
     
     //LOGI("Lefty is: %d\n", isLeftHanded);
+    Minecraft::useAmbientOcclusion = ambientOcclusion;
+}
+
+void Options::syncAmbientOcclusion()
+{
+    Minecraft::useAmbientOcclusion = ambientOcclusion;
+    if (minecraft && minecraft->levelRenderer) minecraft->levelRenderer->allChanged();
 }
 
 void Options::load()
@@ -373,6 +400,7 @@ void Options::save()
 	addOptionToSaveOutput(stringVec, OptionStrings::Graphics_ViewBobbing, bobView);
 	addOptionToSaveOutput(stringVec, OptionStrings::Graphics_RenderDistance, viewDistance);
 	addOptionToSaveOutput(stringVec, OptionStrings::Graphics_GuiScale, guiScale);
+	addOptionToSaveOutput(stringVec, OptionStrings::Graphics_FOV, fieldOfView);
 // 
 // 	static const Option MUSIC;
 // 	static const Option SOUND;

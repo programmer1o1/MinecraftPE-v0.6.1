@@ -23,11 +23,19 @@ Chunk::Chunk( Level* level_, int x, int y, int z, int size, int lists_, GLuint* 
 	dirty(false),
 	occlusion_visible(true),
 	occlusion_querying(false),
+	queued(false),
 	lists(lists_),
 	vboBuffers(ptrBuf),
 	bb(0,0,0,1,1,1),
 	t(Tesselator::instance)
+#if defined(MACOS) || defined(LINUX) || defined(WIN32)
+	, _cpuMeshReady(false)
+	, _inFlight(false)
+#endif
 {
+#if defined(MACOS) || defined(LINUX) || defined(WIN32)
+	for (int i = 0; i < NumLayers; ++i) _cpuVertexCount[i] = 0;
+#endif
 	for (int l = 0; l < NumLayers; l++) {
 		empty[l] = false;
 	}
@@ -66,22 +74,13 @@ void Chunk::translateToPos()
 	glTranslatef2((float)x, (float)y, (float)z);
 }
 
-void Chunk::rebuild()
+// Shared tessellation logic.
+// cpuOnly=true  → uses tArg (background thread tesselator), stores into _cpuMesh[], NO GL calls.
+// cpuOnly=false → uses t (global Tesselator::instance), uploads to GPU immediately (original path).
+void Chunk::rebuildImpl(Tesselator& tArg, bool cpuOnly)
 {
-	if (!dirty) return;
-	//if (!visible) return;
 	updates++;
 
-    //if (!_layerChunks[0]) {
-    //    for (int i = 0; i < NumLayers; ++i)
-    //        _layerChunks[i] = new int[xs * ys * zs];
-    //}
-    //for (int i = 0; i < NumLayers; ++i)
-    //    _layerChunkCount[i] = 0;
-    
-    //Stopwatch& sw = swRebuild;
-    //sw.start();
-    
 	int x0 = x;
 	int y0 = y;
 	int z0 = z;
@@ -91,7 +90,7 @@ void Chunk::rebuild()
 	for (int l = 0; l < NumLayers; l++) {
 		empty[l] = true;
 	}
-    _empty = true;
+	_empty = true;
 
 	LevelChunk::touchedSky = false;
 
@@ -99,53 +98,45 @@ void Chunk::rebuild()
 	Region region(level, x0 - r, y0 - r, z0 - r, x1 + r, y1 + r, z1 + r);
 	TileRenderer tileRenderer(&region);
 
-    bool doRenderLayer[NumLayers] = {true, false, false};
+	bool doRenderLayer[NumLayers] = {true, false, false};
 	for (int l = 0; l < NumLayers; l++) {
-        if (!doRenderLayer[l]) continue;
+		if (!doRenderLayer[l]) continue;
 		bool renderNextLayer = false;
 		bool rendered = false;
 
 		bool started = false;
-        int cindex = -1;
+		int cindex = -1;
 
 		for (int y = y0; y < y1; y++) {
 			for (int z = z0; z < z1; z++) {
 				for (int x = x0; x < x1; x++) {
-                    ++cindex;
-                    //if (l > 0 && cindex != _layerChunks[_layerChunkCount[l]])
+					++cindex;
 					int tileId = region.getTile(x, y, z);
 					if (tileId > 0) {
 						if (!started) {
 							started = true;
 
 #ifndef USE_VBO
-							glNewList(lists + l, GL_COMPILE);
-							glPushMatrix2();
-							translateToPos();
-							float ss = 1.000001f;
-							glTranslatef2(-zs / 2.0f, -ys / 2.0f, -zs / 2.0f);
-							glScalef2(ss, ss, ss);
-							glTranslatef2(zs / 2.0f, ys / 2.0f, zs / 2.0f);
+							if (!cpuOnly) {
+								glNewList(lists + l, GL_COMPILE);
+								glPushMatrix2();
+								translateToPos();
+								float ss = 1.000001f;
+								glTranslatef2(-zs / 2.0f, -ys / 2.0f, -zs / 2.0f);
+								glScalef2(ss, ss, ss);
+								glTranslatef2(zs / 2.0f, ys / 2.0f, zs / 2.0f);
+							}
 #endif
-							t.begin();
-							//printf(".");
-							//printf("Tesselator::offset : %d, %d, %d\n", this->x, this->y, this->z);
-							t.offset((float)(-this->x), (float)(-this->y), (float)(-this->z));
-							//printf("Tesselator::offset : %f, %f, %f\n", this->x, this->y, this->z);
+							tArg.begin();
+							tArg.offset(0.0f, 0.0f, 0.0f);
 						}
 
 						Tile* tile = Tile::tiles[tileId];
 						int renderLayer = tile->getRenderLayer();
 
-//                        if (renderLayer == l)
-//                            rendered |= tileRenderer.tesselateInWorld(tile, x, y, z);
-//                        else {
-//                            _layerChunks[_layerChunkCount[renderLayer]++] = cindex;
-//                        }
-                        
 						if (renderLayer > l) {
 							renderNextLayer = true;
-                            doRenderLayer[renderLayer] = true;
+							doRenderLayer[renderLayer] = true;
 						} else if (renderLayer == l) {
 							rendered |= tileRenderer.tesselateInWorld(tile, x, y, z);
 						}
@@ -155,34 +146,95 @@ void Chunk::rebuild()
 		}
 
 		if (started) {
-
+#if defined(MACOS) || defined(LINUX) || defined(WIN32)
+			if (cpuOnly) {
+				tArg.endToCPU(_cpuMesh[l], _cpuVertexCount[l]);
+			} else {
 #ifdef USE_VBO
-			renderChunk[l] = t.end(true, vboBuffers[l]);
+				renderChunk[l] = tArg.end(true, vboBuffers[l]);
+				renderChunk[l].pos.x = (float)this->x;
+				renderChunk[l].pos.y = (float)this->y;
+				renderChunk[l].pos.z = (float)this->z;
+#else
+				tArg.end(false, -1);
+				glPopMatrix2();
+				glEndList();
+#endif
+			}
+#else  // !desktop
+#ifdef USE_VBO
+			renderChunk[l] = tArg.end(true, vboBuffers[l]);
 			renderChunk[l].pos.x = (float)this->x;
 			renderChunk[l].pos.y = (float)this->y;
 			renderChunk[l].pos.z = (float)this->z;
 #else
-			t.end(false, -1);
+			tArg.end(false, -1);
 			glPopMatrix2();
 			glEndList();
 #endif
-			t.offset(0, 0, 0);
+#endif  // desktop
+			tArg.offset(0, 0, 0);
 		} else {
 			rendered = false;
+#if defined(MACOS) || defined(LINUX) || defined(WIN32)
+			if (cpuOnly) {
+				_cpuMesh[l].clear();
+				_cpuVertexCount[l] = 0;
+			}
+#endif
 		}
 		if (rendered) {
-            empty[l] = false;
-            _empty = false;
-        }
+			empty[l] = false;
+			_empty = false;
+		}
 		if (!renderNextLayer) break;
 	}
 
-    //sw.stop();
-    //sw.printEvery(1, "rebuild-");
 	skyLit = LevelChunk::touchedSky;
 	compiled = true;
-	return;
 }
+
+void Chunk::rebuild()
+{
+	if (!dirty) return;
+	rebuildImpl(t, false);
+}
+
+#if defined(MACOS) || defined(LINUX) || defined(WIN32)
+void Chunk::rebuildCPU(Tesselator& tArg)
+{
+	// Note: dirty flag is NOT checked here — the caller (mesh thread) already
+	// decided this chunk needs work. We reset empty[] then tessellate.
+	rebuildImpl(tArg, true);
+	_cpuMeshReady.store(true, std::memory_order_release);
+}
+
+void Chunk::uploadGPU()
+{
+#ifdef USE_VBO
+	for (int l = 0; l < NumLayers; l++) {
+		if (_cpuMesh[l].empty()) continue;
+
+		int bytes = (int)_cpuMesh[l].size();
+		int access = GL_STATIC_DRAW;
+		glBindBuffer2(GL_ARRAY_BUFFER, vboBuffers[l]);
+		glBufferData2(GL_ARRAY_BUFFER, bytes, _cpuMesh[l].data(), access);
+
+		renderChunk[l].vboId     = vboBuffers[l];
+		renderChunk[l].vertexCount = _cpuVertexCount[l];
+		renderChunk[l].pos.x = (float)this->x;
+		renderChunk[l].pos.y = (float)this->y;
+		renderChunk[l].pos.z = (float)this->z;
+
+		// Release CPU memory after upload
+		_cpuMesh[l].clear();
+		_cpuMesh[l].shrink_to_fit();
+	}
+#endif
+	_cpuMeshReady.store(false, std::memory_order_release);
+	_inFlight.store(false, std::memory_order_release);
+}
+#endif
 
 float Chunk::distanceToSqr( const Entity* player ) const
 {
@@ -254,6 +306,7 @@ void Chunk::setDirty()
 void Chunk::setClean()
 {
 	dirty = false;
+	queued = false;
 }
 
 bool Chunk::isDirty()

@@ -511,11 +511,10 @@ float Tile::getBrightness( LevelSource* level, int x, int y, int z )
 bool Tile::shouldRenderFace( LevelSource* level, int x, int y, int z, int face )
 {
 	if (face == 0 && y == -1) return false;
-	// For fixed size worlds //@todo: external constants rather than magic numbers
-	if (face == 2 && z == -1)  return false;
-	if (face == 3 && z == 256) return false;
-	if (face == 4 && x == -1)  return false;
-	if (face == 5 && x == 256) return false;
+	// Note: the old x/z == -1/256 guards are intentionally removed.
+	// For finite worlds, out-of-bounds getTile() returns invisible_bedrock (opaque),
+	// so the face will still be suppressed by the isSolidRender() check below.
+	// For infinite worlds, those are valid coordinates and faces must be drawn.
 	// Common
 	if (face == 0 && yy0 > 0) return true;
 	if (face == 1 && yy1 < 1) return true;

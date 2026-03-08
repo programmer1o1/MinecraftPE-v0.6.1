@@ -11,7 +11,8 @@ public:
 	OptionsFile();
     void save(const StringVector& settings);
 	StringVector getOptionStrings();
-	
+	void setSettingsPath(const std::string& path);
+
 private:
 	std::string settingsPath;
 };

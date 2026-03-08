@@ -428,18 +428,22 @@ bool Level::findPath(Path* path, Entity* from, int xBest, int yBest, int zBest, 
 /*protected*/
 void Level::setInitialSpawn() {
     isFindingSpawn = true;
-    int xSpawn = CHUNK_CACHE_WIDTH * CHUNK_WIDTH / 2; // (Level.MAX_LEVEL_SIZE - 100) * 0;
+    // Infinite worlds start at the center of the first chunk, not the corner.
+    int xSpawn = levelData.isInfinite() ? 8 : CHUNK_CACHE_WIDTH * CHUNK_WIDTH / 2;
     int ySpawn = 64;
-    int zSpawn = CHUNK_CACHE_WIDTH * CHUNK_DEPTH / 2; // (Level.MAX_LEVEL_SIZE - 100) * 0;
+    int zSpawn = levelData.isInfinite() ? 8 : CHUNK_CACHE_WIDTH * CHUNK_DEPTH / 2;
     while (!dimension->isValidSpawn(xSpawn, zSpawn)) {
         xSpawn += random.nextInt(32) - random.nextInt(32);
         zSpawn += random.nextInt(32) - random.nextInt(32);
 
-		if (xSpawn < 4) xSpawn += 32;
-		if (xSpawn >= LEVEL_WIDTH-4) xSpawn -= 32;
-		if (zSpawn < 4) zSpawn += 32;
-		if (zSpawn >= LEVEL_DEPTH-4) zSpawn -= 32;
+		if (!levelData.isInfinite()) {
+			if (xSpawn < 4) xSpawn += 32;
+			if (xSpawn >= LEVEL_WIDTH-4) xSpawn -= 32;
+			if (zSpawn < 4) zSpawn += 32;
+			if (zSpawn >= LEVEL_DEPTH-4) zSpawn -= 32;
+		}
     }
+    ySpawn = getTopTileY(xSpawn, zSpawn);
     levelData.setSpawn(xSpawn, ySpawn, zSpawn);
     isFindingSpawn = false;
 }
@@ -455,13 +459,16 @@ void Level::validateSpawn() {
         xSpawn += random.nextInt(8) - random.nextInt(8);
         zSpawn += random.nextInt(8) - random.nextInt(8);
 
-		if (xSpawn < 4) xSpawn += 8;
-		if (xSpawn >= LEVEL_WIDTH-4) xSpawn -= 8;
-		if (zSpawn < 4) zSpawn += 8;
-		if (zSpawn >= LEVEL_DEPTH-4) zSpawn -= 8;
+		if (!levelData.isInfinite()) {
+			if (xSpawn < 4) xSpawn += 8;
+			if (xSpawn >= LEVEL_WIDTH-4) xSpawn -= 8;
+			if (zSpawn < 4) zSpawn += 8;
+			if (zSpawn >= LEVEL_DEPTH-4) zSpawn -= 8;
+		}
     }
     levelData.setXSpawn(xSpawn);
     levelData.setZSpawn(zSpawn);
+    levelData.setYSpawn(getTopTileY(xSpawn, zSpawn));
 }
 
 int Level::getTopTile(int x, int z) {
@@ -944,7 +951,10 @@ HitResult Level::clip(const Vec3& A, const Vec3& b, bool liquid /*= false*/, boo
 		if (solidOnly && tile != NULL && tile->getAABB(this, xTile0, yTile0, zTile0) == NULL) {
 			// No collision
 		} else if (t > 0 && tile->mayPick(data, liquid)) {
-			if(xTile0 >= 0 && zTile0 >= 0 && xTile0 < LEVEL_WIDTH && zTile0 < LEVEL_WIDTH) {
+			bool inBounds = levelData.isInfinite()
+				? true
+				: (xTile0 >= 0 && zTile0 >= 0 && xTile0 < LEVEL_WIDTH && zTile0 < LEVEL_WIDTH);
+			if (inBounds) {
 				HitResult r = tile->clip(this, xTile0, yTile0, zTile0, a, b);
 				if (r.isHit()) return r;
 			}
@@ -1505,7 +1515,10 @@ void Level::tick(Entity* e, bool actual) {
     int xc = Mth::floor(e->x);
     int zc = Mth::floor(e->z);
     int r = 32;
-    if (actual && !hasChunksAt(xc - r, 0, zc - r, xc + r, 128, zc + r)) {
+    // For finite worlds, skip ticking entities in unloaded regions.
+    // For infinite worlds, any chunk is generated on demand so this check
+    // would falsely freeze the player when crossing into fresh territory.
+    if (actual && !levelData.isInfinite() && !hasChunksAt(xc - r, 0, zc - r, xc + r, 128, zc + r)) {
         return;
     }
 
@@ -2222,6 +2235,8 @@ void Level::setNightMode( bool isNightMode ) {
 }
 
 bool Level::inRange( int x, int y, int z ) {
+	if (levelData.isInfinite())
+		return y >= 0 && y < LEVEL_HEIGHT;
 	return x >= 0 && x < LEVEL_WIDTH
 		&& y >= 0 && y < LEVEL_HEIGHT
 		&& z >= 0 && z < LEVEL_DEPTH;

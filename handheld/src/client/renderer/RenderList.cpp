@@ -72,8 +72,6 @@ void RenderList::renderChunks() {
 	for (int i = 0; i < bufferLimit; ++i) {
 		RenderChunk& rc = rlists[i];
 
-		glPushMatrix2();
-		glTranslatef2(rc.pos.x, rc.pos.y, rc.pos.z);
 		glBindBuffer2(GL_ARRAY_BUFFER, rc.vboId);
 
 		glVertexPointer2	(3, GL_FLOAT, Stride,  0);
@@ -81,8 +79,6 @@ void RenderList::renderChunks() {
 		glColorPointer2		(4, GL_UNSIGNED_BYTE, Stride, (GLvoid*) (5 * 4));
 
 		glDrawArrays2(GL_TRIANGLES, 0, rc.vertexCount);
-
-		glPopMatrix2();
 	}
 
 	glDisableClientState2(GL_VERTEX_ARRAY);

@@ -53,10 +53,12 @@ void OptionsScreen::init() {
 	def.setSrc(IntRectangle(150, 0, (int)def.width, (int)def.height));
 	btnClose->setImageDef(def, true);
 
-	categoryButtons.push_back(new Touch::TButton(2, I18n::get("options.category.audio")));
-	categoryButtons.push_back(new Touch::TButton(3, I18n::get("options.category.game")));
-	categoryButtons.push_back(new Touch::TButton(4, I18n::get("options.category.controls")));
-	categoryButtons.push_back(new Touch::TButton(5, I18n::get("options.category.graphics")));
+	// Wider category buttons for desktop readability
+	Touch::TButton* b;
+	b = new Touch::TButton(2, I18n::get("options.category.audio"));    b->width = 80; b->height = 28; categoryButtons.push_back(b);
+	b = new Touch::TButton(3, I18n::get("options.category.game"));     b->width = 80; b->height = 28; categoryButtons.push_back(b);
+	b = new Touch::TButton(4, I18n::get("options.category.controls")); b->width = 80; b->height = 28; categoryButtons.push_back(b);
+	b = new Touch::TButton(5, I18n::get("options.category.graphics")); b->width = 80; b->height = 28; categoryButtons.push_back(b);
 	buttons.push_back(bHeader);
 	buttons.push_back(btnClose);
 	for(std::vector<Touch::TButton*>::iterator it = categoryButtons.begin(); it != categoryButtons.end(); ++it) {
@@ -67,33 +69,44 @@ void OptionsScreen::init() {
 
 }
 void OptionsScreen::setupPositions() {
-	int buttonHeight = btnClose->height;
+	int headerH = btnClose->height;
+	int catW = (categoryButtons.size() > 0) ? categoryButtons[0]->width : 80;
+
 	btnClose->x = width - btnClose->width;
 	btnClose->y = 0;
-	int offsetNum = 1;
-	for(std::vector<Touch::TButton*>::iterator it = categoryButtons.begin(); it != categoryButtons.end(); ++it) {
-		(*it)->x = 0;
-		(*it)->y = offsetNum * buttonHeight;
-		(*it)->selected = false;
-		offsetNum++;
-	}
+
 	bHeader->x = 0;
 	bHeader->y = 0;
 	bHeader->width = width - btnClose->width;
-	bHeader->height = btnClose->height;
+	bHeader->height = headerH;
+
+	int curY = headerH + 2;
+	for(std::vector<Touch::TButton*>::iterator it = categoryButtons.begin(); it != categoryButtons.end(); ++it) {
+		(*it)->x = 0;
+		(*it)->y = curY;
+		(*it)->selected = false;
+		curY += (*it)->height + 1;
+	}
+
 	for(std::vector<OptionsPane*>::iterator it = optionPanes.begin(); it != optionPanes.end(); ++it) {
-		if(categoryButtons.size() > 0 && categoryButtons[0] != NULL) {
-			(*it)->x = categoryButtons[0]->width;
-			(*it)->y = bHeader->height;
-			(*it)->width = width - categoryButtons[0]->width;
-			(*it)->setupPositions();
-		}
+		(*it)->x = catW + 2;
+		(*it)->y = headerH + 2;
+		(*it)->width = width - catW - 2;
+		(*it)->setupPositions();
 	}
 	selectCategory(0);
 }
 
 void OptionsScreen::render( int xm, int ym, float a ) {
 	renderBackground();
+
+	// Sidebar background
+	int catW = (categoryButtons.size() > 0) ? categoryButtons[0]->width : 80;
+	int headerH = (bHeader != NULL) ? bHeader->height : 26;
+	fill(0, headerH, catW, height, 0x66000000);
+	// Sidebar right border
+	fill(catW, headerH, catW + 1, height, 0x88888888);
+
 	super::render(xm, ym, a);
 	int xmm = xm * width / minecraft->width;
 	int ymm = ym * height / minecraft->height - 1;
@@ -160,7 +173,8 @@ void OptionsScreen::generateOptionScreens() {
 		.addOptionItem(&Options::Option::AMBIENT_OCCLUSION, minecraft)
 		.addOptionItem(&Options::Option::RENDER_DISTANCE, minecraft)
 		.addOptionItem(&Options::Option::GUI_SCALE, minecraft)
-		.addOptionItem(&Options::Option::VIEW_BOBBING, minecraft);
+		.addOptionItem(&Options::Option::VIEW_BOBBING, minecraft)
+		.addOptionItem(&Options::Option::FOV, minecraft);
 // 	int mojangGroup = optionPanes[0]->createOptionsGroup("Mojang");
 // 	static const int arr[] = {5,4,3,15};
 // 	std::vector<int> vec (arr, arr + sizeof(arr) / sizeof(arr[0]) );

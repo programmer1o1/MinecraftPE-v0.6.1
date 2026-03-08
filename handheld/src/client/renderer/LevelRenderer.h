@@ -9,6 +9,7 @@
 #include "gles.h"
 #include <vector>
 
+
 class Minecraft;
 class Textures;
 class Culler;
@@ -125,6 +126,7 @@ private:
     Textures* textures;
 //    /*private*/ TileRenderer tileRenderer;
 //    /*private*/ IntBuffer occlusionCheckIds;
+
 };
 
 #endif /*NET_MINECRAFT_CLIENT_RENDERER__LevelRenderer_H__*/

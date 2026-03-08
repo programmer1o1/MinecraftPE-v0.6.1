@@ -3,8 +3,10 @@
 #include "../../renderer/Textures.h"
 #include "../Screen.h"
 #include "../../../util/Mth.h"
+#include "../../../locale/I18n.h"
 #include <algorithm>
 #include <assert.h>
+#include <sstream>
 Slider::Slider(Minecraft* minecraft, const Options::Option* option,  float progressMin, float progressMax)
 : sliderType(SliderProgress), mouseDownOnElement(false), option(option), numSteps(0), progressMin(progressMin), progressMax(progressMax) {
 	if(option != NULL) {
@@ -42,25 +44,63 @@ Slider::Slider(Minecraft* minecraft, const Options::Option* option, const std::v
 	}
 }
 
+static std::string sliderValueText(SliderType sliderType, const Options::Option* option,
+                                    float percentage, int curStepValue,
+                                    float progressMin, float progressMax) {
+	if (sliderType == SliderStep) {
+		if (option == &Options::Option::RENDER_DISTANCE) {
+			int idx = Mth::clamp(curStepValue, 0, 7);
+			return I18n::get(Options::RENDER_DISTANCE_NAMES[idx]);
+		} else if (option == &Options::Option::DIFFICULTY) {
+			int idx = Mth::clamp(curStepValue, 0, 3);
+			return I18n::get(Options::DIFFICULTY_NAMES[idx]);
+		} else if (option == &Options::Option::GUI_SCALE) {
+			int idx = Mth::clamp(curStepValue, 0, 3);
+			return I18n::get(Options::GUI_SCALE[idx]);
+		} else if (option == &Options::Option::GRAPHICS) {
+			return curStepValue ? I18n::get("options.graphics.fancy") : I18n::get("options.graphics.fast");
+		}
+		std::stringstream ss; ss << curStepValue; return ss.str();
+	} else {
+		int pct = (int)(percentage * 100.0f + 0.5f);
+		std::stringstream ss; ss << pct << "%"; return ss.str();
+	}
+}
+
 void Slider::render( Minecraft* minecraft, int xm, int ym ) {
+	// Reserve right portion for value text (~32px)
+	const int textAreaW = 32;
 	int xSliderStart = x + 5;
-	int xSliderEnd = x + width - 5;
-	int ySliderStart = y + 6;
-	int ySliderEnd = y + 9;
+	int xSliderEnd = x + width - 5 - textAreaW;
+	int barHeight = 4;
+	int ySliderStart = y + (height - barHeight) / 2;
+	int ySliderEnd   = ySliderStart + barHeight;
 	int handleSizeX = 9;
 	int handleSizeY = 15;
 	int barWidth = xSliderEnd - xSliderStart;
-	//fill(x, y + 8, x + (int)(width * percentage), y + height, 0xffff00ff);
-	fill(xSliderStart, ySliderStart, xSliderEnd, ySliderEnd, 0xff606060);
+
+	// Track background
+	fill(xSliderStart, ySliderStart, xSliderEnd, ySliderEnd, 0xff303030);
+	// Filled portion (progress indicator)
+	fill(xSliderStart, ySliderStart, xSliderStart + (int)(percentage * barWidth), ySliderEnd, 0xff4488bb);
+
 	if(sliderType == SliderStep) {
-		int stepDistance = barWidth / (numSteps -1);
+		int stepDistance = (numSteps > 1) ? barWidth / (numSteps - 1) : 0;
 		for(int a = 0; a <= numSteps - 1; ++a) {
-			int renderSliderStepPosX = xSliderStart + a * stepDistance + 1;
-			fill(renderSliderStepPosX - 1, ySliderStart - 2, renderSliderStepPosX + 1, ySliderEnd + 2, 0xff606060);
+			int rx = xSliderStart + a * stepDistance;
+			fill(rx, ySliderStart - 1, rx + 1, ySliderEnd + 1, 0xff888888);
 		}
 	}
+
 	minecraft->textures->loadAndBindTexture("gui/touchgui.png");
-	blit(xSliderStart + (int)(percentage * barWidth) - handleSizeX / 2, y, 226, 126, handleSizeX, handleSizeY, handleSizeX, handleSizeY);
+	int handleX = xSliderStart + (int)(percentage * barWidth) - handleSizeX / 2;
+	int handleY = y + (height - handleSizeY) / 2;
+	blit(handleX, handleY, 226, 126, handleSizeX, handleSizeY, handleSizeX, handleSizeY);
+
+	// Value label on the right
+	std::string valText = sliderValueText(sliderType, option, percentage, curStepValue, progressMin, progressMax);
+	int textY = y + (height - 8) / 2;
+	minecraft->font->draw(valText, (float)(x + width - textAreaW + 2), (float)textY, 0xaaddff, false);
 }
 
 void Slider::mouseClicked( Minecraft* minecraft, int x, int y, int buttonNum ) {
@@ -86,13 +126,20 @@ void Slider::tick(Minecraft* minecraft) {
 		minecraft->screen->toGUICoordinate(xm, ym);
 		if(mouseDownOnElement) {
 			const int xSliderStart = x + 5;
-			const int sliderWidth = width - 10;
-			if (sliderWidth <= 0) {
-				return;
-			}
+			const int textAreaW = 32;
+			const int sliderWidth = width - 10 - textAreaW; // must match render()
+			if (sliderWidth <= 0) return;
 			percentage = float(xm - xSliderStart) / float(sliderWidth);
 			percentage = Mth::clamp(percentage, 0.0f, 1.0f);
-			setOption(minecraft);
+			if (sliderType == SliderStep) {
+				// Update display live so value label tracks the handle
+				int displayStep = Mth::floor(percentage * (numSteps - 1) + 0.5f);
+				displayStep = Mth::Min(displayStep, numSteps - 1);
+				curStepValue = sliderSteps[displayStep];
+				// Commit is deferred to mouseReleased
+			} else {
+				setOption(minecraft);
+			}
 		}
 	}
 }

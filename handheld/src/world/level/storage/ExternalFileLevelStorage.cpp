@@ -104,6 +104,8 @@ ExternalFileLevelStorage::~ExternalFileLevelStorage()
 {
 	delete regionFile;
 	delete loadedLevelData;
+	for (auto& kv : regionFiles)
+		delete kv.second;
 }
 
 void ExternalFileLevelStorage::saveLevelData(LevelData& levelData, std::vector<Player*>* players) {
@@ -270,12 +272,15 @@ bool ExternalFileLevelStorage::readPlayerData(const std::string& filename, Level
 			if (fread(&dest.playerData, 1, sizeof(dest.playerData), fp) != size)
 				break;
 
-			// Fix coordinates
+			// Fix coordinates — only clamp x/z for finite (Old) worlds.
+			// Infinite worlds have no boundaries, so don't snap the player.
 			Vec3& pos = dest.playerData.pos;
-			if (pos.x < 0.5f) pos.x = 0.5f;
-			if (pos.z < 0.5f) pos.z = 0.5f;
-			if (pos.x > (LEVEL_WIDTH - 0.5f)) pos.x = LEVEL_WIDTH - 0.5f;
-			if (pos.z > (LEVEL_DEPTH - 0.5f)) pos.z = LEVEL_DEPTH - 0.5f;
+			if (!dest.isInfinite()) {
+				if (pos.x < 0.5f) pos.x = 0.5f;
+				if (pos.z < 0.5f) pos.z = 0.5f;
+				if (pos.x > (LEVEL_WIDTH - 0.5f)) pos.x = LEVEL_WIDTH - 0.5f;
+				if (pos.z > (LEVEL_DEPTH - 0.5f)) pos.z = LEVEL_DEPTH - 0.5f;
+			}
 			if (pos.y < 0) pos.y = 64;
 
 			dest.playerDataVersion = version;
@@ -330,17 +335,68 @@ void ExternalFileLevelStorage::tick()
 	}
 }
 
+// Floor-divide cx by 32, rounding toward -infinity (for negative chunk coords).
+static inline int floorDivBy32(int v)
+{
+	return v < 0 ? (v - 31) / 32 : v / 32;
+}
+
+static inline int64_t regionKey(int rx, int rz)
+{
+	return ((int64_t)(uint32_t)rx << 32) | (uint32_t)rz;
+}
+
+RegionFile* ExternalFileLevelStorage::getOrOpenRegion(int cx, int cz)
+{
+	int rx = floorDivBy32(cx);
+	int rz = floorDivBy32(cz);
+	int64_t key = regionKey(rx, rz);
+
+	auto it = regionFiles.find(key);
+	if (it != regionFiles.end())
+		return it->second; // may be nullptr if open() failed previously
+
+	std::string path = levelPath + "/chunks.r." +
+	                   std::to_string(rx) + "." + std::to_string(rz) + ".dat";
+	RegionFile* rf = new RegionFile(path, true);
+	if (!rf->open())
+	{
+		delete rf;
+		rf = NULL;
+	}
+	regionFiles[key] = rf;
+	return rf;
+}
+
 void ExternalFileLevelStorage::save(Level* level, LevelChunk* levelChunk)
 {
-	if (!regionFile)
+	int cx = levelChunk->x;
+	int cz = levelChunk->z;
+	int lx = cx, lz = cz; // local coords within the region file
+
+	RegionFile* rf;
+	if (level->isInfinite())
 	{
-		regionFile = new RegionFile(levelPath);
-		if (!regionFile->open())
+		rf = getOrOpenRegion(cx, cz);
+		if (!rf) return;
+		int rx = floorDivBy32(cx);
+		int rz = floorDivBy32(cz);
+		lx = cx - rx * 32;
+		lz = cz - rz * 32;
+	}
+	else
+	{
+		if (!regionFile)
 		{
-			delete regionFile;
-			regionFile = NULL;
-			return;
+			regionFile = new RegionFile(levelPath);
+			if (!regionFile->open())
+			{
+				delete regionFile;
+				regionFile = NULL;
+				return;
+			}
 		}
+		rf = regionFile;
 	}
 
 	// Write chunk
@@ -353,29 +409,46 @@ void ExternalFileLevelStorage::save(Level* level, LevelChunk* levelChunk)
 
 	chunkData.Write((const char*)levelChunk->updateMap, CHUNK_COLUMNS);
 
-	regionFile->writeChunk(levelChunk->x, levelChunk->z, chunkData);
-
-	// Write entities
+	rf->writeChunk(lx, lz, chunkData);
 
 	//LOGI("Saved chunk (%d, %d)\n", levelChunk->x, levelChunk->z);
-
 }
 
 LevelChunk* ExternalFileLevelStorage::load(Level* level, int x, int z)
 {
-	if (!regionFile)
+	int lx = x, lz = z; // local coords within the region file
+
+	RegionFile* rf;
+	if (level->isInfinite())
 	{
-		regionFile = new RegionFile(levelPath);
-		if (!regionFile->open())
+		rf = getOrOpenRegion(x, z);
+		if (!rf) return NULL;
+		int rx = floorDivBy32(x);
+		int rz = floorDivBy32(z);
+		lx = x - rx * 32;
+		lz = z - rz * 32;
+	}
+	else
+	{
+		if (!regionFile)
 		{
-			delete regionFile;
-			regionFile = NULL;
-			return NULL;
+			regionFile = new RegionFile(levelPath);
+			if (!regionFile->open())
+			{
+				delete regionFile;
+				regionFile = NULL;
+				return NULL;
+			}
+			// Pre-read the entire region file into memory so all subsequent
+			// readChunk() calls are pure memory accesses with no fseek/fread.
+			// Call finishPreload() once the chunk load loop is complete.
+			regionFile->preloadToMemory();
 		}
+		rf = regionFile;
 	}
 
 	RakNet::BitStream* chunkData = NULL;
-	if (!regionFile->readChunk(x, z, &chunkData))
+	if (!rf->readChunk(lx, lz, &chunkData))
 	{
 		//LOGI("Failed to read data for %d, %d\n", x, z);
 		return NULL;
@@ -627,6 +700,14 @@ void ExternalFileLevelStorage::saveAll( Level* level, std::vector<LevelChunk*>& 
     ChunkStorage::saveAll(level, levelChunks);
 	int numChunks = savePendingUnsavedChunks(-1);
     LOGI("Saving %d additional chunks.\n", numChunks);
+}
+
+void ExternalFileLevelStorage::finishPreload()
+{
+	if (regionFile)
+		regionFile->freeMemoryCache();
+	for (auto& kv : regionFiles)
+		if (kv.second) kv.second->freeMemoryCache();
 }
 
 #endif /*DEMO_MODE*/

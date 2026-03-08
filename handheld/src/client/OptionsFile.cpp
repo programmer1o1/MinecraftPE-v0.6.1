@@ -22,6 +22,10 @@ void OptionsFile::save(const StringVector& settings) {
 	}
 }
 
+void OptionsFile::setSettingsPath(const std::string& path) {
+	settingsPath = path;
+}
+
 StringVector OptionsFile::getOptionStrings() {
 	StringVector returnVector;
 	FILE* pFile = fopen(settingsPath.c_str(), "r");

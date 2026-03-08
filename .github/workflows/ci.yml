@@ -8,7 +8,6 @@ on:
 
 jobs:
   # ── macOS (arm64 / Apple Silicon) ─────────────────────────────────────────
-  # The only fully-supported desktop port; builds with SDL2 + OpenGL 2.1 + OpenAL.
   macos:
     name: macOS (arm64)
     runs-on: macos-latest
@@ -18,21 +17,33 @@ jobs:
       - name: Install dependencies
         run: brew install sdl2 libpng zlib
 
-      - name: Build
+      - name: Build (debug)
         working-directory: handheld/project/macos
         run: make -j$(sysctl -n hw.logicalcpu)
 
-      - name: Stage playable artifact
-        run: |
-          mkdir -p artifact
-          cp handheld/project/macos/minecraftpe artifact/
-          cp -R handheld/data artifact/
+      - name: Build (release)
+        working-directory: handheld/project/macos
+        run: make BUILD=release -j$(sysctl -n hw.logicalcpu)
 
-      - name: Upload binary + data
+      - name: Stage artifacts
+        run: |
+          mkdir -p artifact/debug artifact/release
+          cp handheld/project/macos/minecraftpe artifact/debug/
+          cp -R handheld/data artifact/debug/
+          cp handheld/project/macos/minecraftpe artifact/release/
+          cp -R handheld/data artifact/release/
+
+      - name: Upload debug binary
         uses: actions/upload-artifact@v4
         with:
-          name: minecraftpe-macos
-          path: artifact/
+          name: minecraftpe-macos-debug
+          path: artifact/debug/
+
+      - name: Upload release binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: minecraftpe-macos-release
+          path: artifact/release/
 
   # ── Linux (x86_64) ────────────────────────────────────────────────────────
   linux:
@@ -46,25 +57,35 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -y libsdl2-dev libpng-dev zlib1g-dev libopenal-dev libgl1-mesa-dev
 
-      - name: Build
+      - name: Build (debug)
         working-directory: handheld/project/linux
         run: make -j$(nproc)
 
-      - name: Stage playable artifact
-        run: |
-          mkdir -p artifact
-          cp handheld/project/linux/minecraftpe artifact/
-          cp -r handheld/data artifact/
+      - name: Build (release)
+        working-directory: handheld/project/linux
+        run: make BUILD=release -j$(nproc)
 
-      - name: Upload binary + data
+      - name: Stage artifacts
+        run: |
+          mkdir -p artifact/debug artifact/release
+          cp handheld/project/linux/minecraftpe artifact/debug/
+          cp -r handheld/data artifact/debug/
+          cp handheld/project/linux/minecraftpe artifact/release/
+          cp -r handheld/data artifact/release/
+
+      - name: Upload debug binary
         uses: actions/upload-artifact@v4
         with:
-          name: minecraftpe-linux
-          path: artifact/
+          name: minecraftpe-linux-debug
+          path: artifact/debug/
+
+      - name: Upload release binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: minecraftpe-linux-release
+          path: artifact/release/
 
   # ── Win32 (MSVC, x86) ─────────────────────────────────────────────────────
-  # All required libraries (GLES emulator, GLEW, libpng, zlib) are pre-bundled
-  # in handheld/lib/ so no extra installs are needed.
   win32:
     name: Win32 (MSVC x86)
     runs-on: windows-latest
@@ -76,7 +97,6 @@ jobs:
 
       - name: Build (Release)
         working-directory: handheld/project/win32
-        # Retarget from the original v100 (VS 2010) toolset to v143 (VS 2022)
         run: msbuild MinecraftWin32.sln /p:Configuration=Release /p:Platform=Win32 /p:PlatformToolset=v143 /m /nologo
 
       - name: Copy runtime DLLs next to executable
@@ -93,30 +113,21 @@ jobs:
           name: minecraftpe-win32
           path: handheld/project/win32/Release/
 
-  # ── Android (armeabi-v7a) ──────────────────────────────────────────────────
-  # Requires NDK r16b — the last release with stlport_static (used in Application.mk).
-  # NDK r18+ removed stlport; to upgrade, Application.mk would need APP_STL := c++_static.
+  # ── Android (armeabi-v7a + arm64-v8a) ─────────────────────────────────────
   android:
-    name: Android (armeabi-v7a, NDK r16b)
+    name: Android (armeabi-v7a + arm64-v8a, NDK r27c)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install NDK r16b
+      - name: Install NDK r27c
         run: |
-          # NDK r16b's clang++ links against libncurses.so.5 / libtinfo.so.5.
-          # Ubuntu 22.04 only ships ncurses6; create symlinks (ABI-compatible).
-          sudo apt-get update -qq
-          sudo apt-get install -y libncurses6 libtinfo6
-          sudo ln -sf /lib/x86_64-linux-gnu/libncurses.so.6 /lib/x86_64-linux-gnu/libncurses.so.5 || true
-          sudo ln -sf /lib/x86_64-linux-gnu/libtinfo.so.6 /lib/x86_64-linux-gnu/libtinfo.so.5 || true
-          wget -q https://dl.google.com/android/repository/android-ndk-r16b-linux-x86_64.zip
-          unzip -q android-ndk-r16b-linux-x86_64.zip
-          echo "NDK_ROOT=$PWD/android-ndk-r16b" >> $GITHUB_ENV
+          wget -q https://dl.google.com/android/repository/android-ndk-r27c-linux.zip
+          unzip -q android-ndk-r27c-linux.zip
+          echo "NDK_ROOT=$PWD/android-ndk-r27c" >> $GITHUB_ENV
 
       - name: Build native .so
         working-directory: handheld/project/android
-        # NDK_MODULE_PATH must point to lib_projects so ndk-build can find the raknet/jni module
         run: NDK_MODULE_PATH=../lib_projects $NDK_ROOT/ndk-build -j$(nproc) NDK_PROJECT_PATH=. APP_BUILD_SCRIPT=jni/Android.mk
 
       - name: Set up Java 17
@@ -130,23 +141,32 @@ jobs:
         with:
           gradle-version: '8.5'
 
-      - name: Install Android SDK platform 34
+      - name: Install Android SDK platform 35
         run: |
           yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager \
-            "platforms;android-34" "build-tools;34.0.0" 2>/dev/null | tail -1
+            "platforms;android-35" "build-tools;35.0.0" 2>/dev/null | tail -1
 
-      - name: Build APK
+      - name: Build debug APK
         working-directory: handheld/project/android
         run: gradle assembleDebug
 
-      - name: Upload APK
+      - name: Build release APK (unsigned)
+        working-directory: handheld/project/android
+        run: gradle assembleRelease
+
+      - name: Upload debug APK
         uses: actions/upload-artifact@v4
         with:
-          name: minecraftpe-android
+          name: minecraftpe-android-debug
           path: handheld/project/android/build/outputs/apk/debug/*.apk
 
+      - name: Upload release APK (unsigned)
+        uses: actions/upload-artifact@v4
+        with:
+          name: minecraftpe-android-release
+          path: handheld/project/android/build/outputs/apk/release/*.apk
+
   # ── Dedicated server (Linux x86, 32-bit) ──────────────────────────────────
-  # Uses the CMakeLists in dedicated_server/; requires gcc-multilib for -m32.
   dedicated-server:
     name: Dedicated server (Linux x86)
     runs-on: ubuntu-latest

@@ -421,6 +421,31 @@ void Tesselator::draw()
 #endif
 }
 
+#if defined(MACOS) || defined(LINUX) || defined(WIN32)
+void Tesselator::endToCPU(std::vector<uint8_t>& outData, int& outVertexCount)
+{
+	if (!tesselating || _voidBeginEnd) {
+		outVertexCount = 0;
+		outData.clear();
+		clear();
+		return;
+	}
+
+	tesselating = false;
+	outVertexCount = vertices;
+
+	if (p > 0) {
+		int bytes = p * sizeof(VERTEX);
+		outData.resize(bytes);
+		memcpy(outData.data(), _varray, bytes);
+	} else {
+		outData.clear();
+	}
+
+	clear();
+}
+#endif
+
 void Tesselator::voidBeginAndEndCalls(bool doVoid) {
 	_voidBeginEnd = doVoid;
 }

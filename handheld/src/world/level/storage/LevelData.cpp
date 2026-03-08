@@ -13,6 +13,7 @@ LevelData::LevelData()
 	playerDataVersion(-1),
 	storageVersion(0),
 	gameType(GameType::Default),
+	worldType(WorldType::Old),
 	loadedPlayerTag(NULL)
 {
 	//LOGI("ctor 1: %p\n", this);
@@ -22,10 +23,11 @@ LevelData::LevelData()
 LevelData::LevelData( const LevelSettings& settings, const std::string& levelName, int generatorVersion /*= -1*/ )
 :	seed(settings.getSeed()),
 	gameType(settings.getGameType()),
+	worldType(settings.getWorldType()),
 	levelName(levelName),
-	xSpawn(128),
+	xSpawn(settings.getWorldType() == WorldType::Infinite ? 0 : 128),
 	ySpawn(64),
-	zSpawn(128),
+	zSpawn(settings.getWorldType() == WorldType::Infinite ? 0 : 128),
 	lastPlayed(0),
 	time(0),
 	dimension(Dimension::NORMAL),
@@ -51,6 +53,7 @@ LevelData::LevelData( CompoundTag* tag )
 LevelData::LevelData( const LevelData& rhs )
 :	seed(rhs.seed),
 	gameType(rhs.gameType),
+	worldType(rhs.worldType),
 	levelName(rhs.levelName),
 	xSpawn(rhs.xSpawn),
 	ySpawn(rhs.ySpawn),
@@ -76,6 +79,7 @@ LevelData& LevelData::operator=( const LevelData& rhs )
 	if (this != &rhs) {
 		seed		= rhs.seed;
 		gameType	= rhs.gameType;
+		worldType	= rhs.worldType;
 		levelName	= rhs.levelName;
 		xSpawn		= rhs.xSpawn;
 		ySpawn		= rhs.ySpawn;
@@ -170,6 +174,7 @@ void LevelData::setTagData( CompoundTag* tag, CompoundTag* playerTag )
 	tag->putString("LevelName", levelName);
 	tag->putInt("StorageVersion", storageVersion);
 	tag->putInt("Platform", 2);
+	tag->putInt("WorldType", worldType);
 
 	if (playerTag != NULL) {
 		tag->putCompound("Player", playerTag);
@@ -189,6 +194,7 @@ void LevelData::getTagData( const CompoundTag* tag )
 	sizeOnDisk = (int)tag->getLong("SizeOnDisk");
 	levelName = tag->getString("LevelName");
 	storageVersion = tag->getInt("StorageVersion");
+	worldType = tag->getInt("WorldType"); // 0 if missing (old worlds default to Old)
 
 	spawnMobs = (gameType == GameType::Survival);
 
@@ -361,4 +367,19 @@ bool LevelData::getSpawnMobs() const
 void LevelData::setSpawnMobs( bool doSpawn )
 {
 	spawnMobs = doSpawn;
+}
+
+int LevelData::getWorldType() const
+{
+	return worldType;
+}
+
+void LevelData::setWorldType( int type )
+{
+	worldType = type;
+}
+
+bool LevelData::isInfinite() const
+{
+	return worldType == WorldType::Infinite;
 }

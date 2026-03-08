@@ -11,12 +11,18 @@ namespace GameType {
 	const int Default = Creative;
 }
 
+namespace WorldType {
+	const int Old      = 0; // finite 256×256 world
+	const int Infinite = 1; // infinite procedural world
+}
+
 class LevelSettings
 {
 public:
-    LevelSettings(long seed, int gameType)
+    LevelSettings(long seed, int gameType, int worldType = WorldType::Old)
     :   seed(seed),
-        gameType(gameType)
+        gameType(gameType),
+        worldType(worldType)
     {
     }
 	static LevelSettings None() {
@@ -29,6 +35,10 @@ public:
 
     int getGameType() const {
         return gameType;
+    }
+
+    int getWorldType() const {
+        return worldType;
     }
 
 	//
@@ -53,6 +63,7 @@ public:
 private:
     const long seed;
     const int gameType;
+    const int worldType;
 };
 
 #endif /*NET_MINECRAFT_WORLD_LEVEL__LevelSettings_H__*/

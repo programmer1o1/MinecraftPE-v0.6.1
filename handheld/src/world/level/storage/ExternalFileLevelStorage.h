@@ -7,6 +7,8 @@
 
 #include <vector>
 #include <list>
+#include <unordered_map>
+#include <cstdint>
 
 //#include "com/mojang/nbt/CompoundTag.h"
 #include "LevelStorage.h"
@@ -61,6 +63,10 @@ public:
 	//
 	virtual LevelChunk* load(Level* level, int x, int z);
 	void save(Level* level, LevelChunk* levelChunk);
+
+	// Release the in-memory region file cache after all chunks have been loaded.
+	// Call this once the initial chunk preload loop in prepareLevel() is complete.
+	void finishPreload();
 	// @note, loadEntities and saveEntities dont use second parameter
 	void loadEntities(Level* level, LevelChunk* levelChunk);
 	void saveEntities(Level* level, LevelChunk* levelChunk);
@@ -70,11 +76,16 @@ public:
 	virtual void tick();
 	virtual void flush() {}
 private:
+	// For infinite worlds: get (or create+open) the RegionFile covering chunk (cx,cz).
+	// Returns nullptr on failure.
+	RegionFile* getOrOpenRegion(int cx, int cz);
+
 	std::string levelId;
 	std::string levelPath;
 	LevelData* loadedLevelData;
-	RegionFile* regionFile;
+	RegionFile* regionFile;       // used for Old (finite) worlds
 	RegionFile* entitiesFile;
+	std::unordered_map<int64_t, RegionFile*> regionFiles; // used for Infinite worlds
 
 	Level* level;
 	int tickCount;

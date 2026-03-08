@@ -15,6 +15,7 @@ public:
     static const char* Graphics_RenderDistance;
     static const char* Graphics_GuiScale;
     static const char* Graphics_ViewBobbing;
+    static const char* Graphics_FOV;
     
     static const char* Controls_Sensitivity;
     static const char* Controls_InvertMouse;

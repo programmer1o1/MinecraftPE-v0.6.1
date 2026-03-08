@@ -1,4 +1,4 @@
-APP_PLATFORM := android-9
+APP_PLATFORM := android-21
 # libc++ has cleaner static initialization than stlport; avoids SIGBUS on
 # Samsung kernels with strict alignment enforcement (stlport had unaligned
 # accesses in its global constructors).

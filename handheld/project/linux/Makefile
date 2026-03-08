@@ -13,6 +13,19 @@ PNG_CFLAGS   := $(shell pkg-config --cflags libpng)
 PNG_LIBS     := $(shell pkg-config --libs   libpng)
 AL_LIBS      := $(shell pkg-config --libs   openal 2>/dev/null || echo "-lopenal")
 
+# ── Build mode (debug|release) ────────────────────────────────────────────────
+# Usage:  make              (debug, with ASAN+UBSAN)
+#         make BUILD=release (optimised, no sanitizers)
+BUILD ?= debug
+
+ifeq ($(BUILD),release)
+  OPT_FLAGS := -O2 -DNDEBUG
+  SAN_FLAGS :=
+else
+  OPT_FLAGS := -O0 -g
+  SAN_FLAGS := -fsanitize=address,undefined -fno-omit-frame-pointer
+endif
+
 # ── Compiler flags ────────────────────────────────────────────────────────────
 CFLAGS := \
 	-DLINUX \
@@ -23,8 +36,9 @@ CFLAGS := \
 	$(PNG_CFLAGS) \
 	-I$(SRCDIR) \
 	-I$(SRCDIR)/raknet \
-	-std=c++11 \
-	-O0 -g \
+	-std=c++17 \
+	$(OPT_FLAGS) \
+	$(SAN_FLAGS) \
 	-Wno-deprecated-declarations \
 	-Wno-unused-variable \
 	-Wno-reorder \
@@ -39,7 +53,8 @@ LDFLAGS := \
 	$(AL_LIBS) \
 	-lGL \
 	-lpthread \
-	-lz
+	-lz \
+	$(SAN_FLAGS)
 
 # ── Game source files ─────────────────────────────────────────────────────────
 GAME_SOURCES := \
@@ -299,14 +314,15 @@ RAKNET_SOURCES := $(filter-out $(RAKNET_EXCLUDE), $(RAKNET_ALL))
 
 SOURCES := $(GAME_SOURCES) $(RAKNET_SOURCES)
 OBJECTS := $(patsubst $(SRCDIR)/%.cpp, obj/%.o, $(SOURCES))
+ALL_OBJECTS := $(OBJECTS)
 
 # ── Targets ───────────────────────────────────────────────────────────────────
 .PHONY: all clean
 
 all: $(MODULE)
 
-$(MODULE): $(OBJECTS)
-	$(CXX) $(OBJECTS) $(LDFLAGS) -o $@
+$(MODULE): $(ALL_OBJECTS)
+	$(CXX) $(ALL_OBJECTS) $(LDFLAGS) -o $@
 
 obj/%.o: $(SRCDIR)/%.cpp
 	@mkdir -p $(@D)

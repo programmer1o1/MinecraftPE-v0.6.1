@@ -89,9 +89,17 @@ void renderCursor(float x, float y, Minecraft* minecraft) {
 
 /*private*/
 void GameRenderer::setupCamera(float a, int eye) {
-    renderDistance = (float) (16 * 16 >> (mc->options.viewDistance));
+    // Must match LevelRenderer::allChanged() DIST_TABLE exactly.
+    static const int DIST_TABLE[8] = {512, 256, 128, 64, 768, 1024, 1536, 2048};
+    int vd = mc->options.viewDistance & 7;
+    renderDistance = (float)DIST_TABLE[vd];
+#if defined(MACOS) || defined(LINUX) || defined(WIN32)
+    if (renderDistance > 1024.0f) renderDistance = 1024.0f;
+#else
+    if (renderDistance > 400.0f)  renderDistance = 400.0f;
+#endif
 #if defined(ANDROID)
-    if (mc->isPowerVR() && mc->options.viewDistance <= 2)
+    if (mc->isPowerVR() && vd <= 2)
 		renderDistance *= 0.8f;
 #endif
 
@@ -397,7 +405,7 @@ void GameRenderer::tickFov() {
 /*private*/
 float GameRenderer::getFov(float a, bool applyEffects) {
     Mob* player = mc->cameraTargetPlayer;
-    float fov = 70;
+    float fov = mc->options.fieldOfView;
 
 	if (applyEffects)
 		fov *= this->oFov + (this->fov - this->oFov) * a;
@@ -780,7 +788,8 @@ void GameRenderer::tick(int nTick, int maxTick) {
 											Mth::floor(mc->cameraTargetPlayer->y),
 											Mth::floor(mc->cameraTargetPlayer->z));
 
-	float whiteness = (3 - mc->options.viewDistance) / 3.0f;
+	int _vdClamped = mc->options.viewDistance & 7; if (_vdClamped > 3) _vdClamped = 3;
+	float whiteness = (3 - _vdClamped) / 3.0f;
     float fogBrT = brr * (1 - whiteness) + whiteness;
     fogBr += (fogBrT - fogBr) * 0.1f;
 
@@ -795,7 +804,8 @@ void GameRenderer::setupClearColor(float a) {
     Level* level = mc->level;
     Mob* player = mc->cameraTargetPlayer;
 
-    float whiteness = 1.0f / (4 - mc->options.viewDistance);
+    int _vd2 = mc->options.viewDistance & 7; if (_vd2 > 3) _vd2 = 3;
+    float whiteness = 1.0f / (4 - _vd2);
     whiteness = 1 - (float) pow(whiteness, 0.25f);
 
     Vec3 skyColor = level->getSkyColor(mc->cameraTargetPlayer, a);

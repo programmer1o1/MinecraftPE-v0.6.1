@@ -1,6 +1,196 @@
 #include "gles.h"
+// Un-define the glAlphaFunc redirect inside this translation unit so we can
+// call the real OpenGL function from our glAlphaFunc_shader wrapper without
+// infinite recursion.
+#if defined(MACOS) || defined(LINUX)
+#undef glAlphaFunc
+#endif
+
 #include <cmath>
 #include <cstdio>
+#include <cstdlib>
+
+// ── GLSL Shader support (macOS / Linux desktop only) ──────────────────────
+#if defined(MACOS) || defined(LINUX)
+
+// ---------------------------------------------------------------------------
+// Embedded GLSL sources (GLSL 1.20 — OpenGL 2.1 compatibility profile)
+// ---------------------------------------------------------------------------
+static const char* s_vertSrc =
+    "#version 120\n"
+    "void main() {\n"
+    "    gl_Position    = gl_ModelViewProjectionMatrix * gl_Vertex;\n"
+    "    gl_FrontColor  = gl_Color;\n"
+    "    gl_TexCoord[0] = gl_MultiTexCoord0;\n"
+    "    gl_FogFragCoord = abs(gl_Position.z / gl_Position.w);\n"
+    "}\n";
+
+static const char* s_fragSrc =
+    "#version 120\n"
+    "uniform sampler2D tex;\n"
+    "uniform bool      useTexture;\n"
+    "uniform bool      useAlphaTest;\n"
+    "uniform float     alphaTestRef;\n"
+    "uniform bool      useFog;\n"
+    "void main() {\n"
+    "    vec4 color = gl_Color;\n"
+    "    if (useTexture) {\n"
+    "        color *= texture2D(tex, gl_TexCoord[0].xy);\n"
+    "    }\n"
+    "    if (useAlphaTest && color.a < alphaTestRef) {\n"
+    "        discard;\n"
+    "    }\n"
+    "    if (useFog) {\n"
+    "        float denom = gl_Fog.end - gl_Fog.start;\n"
+    "        float fogFactor = clamp((gl_Fog.end - gl_FogFragCoord) / (denom + 0.001), 0.0, 1.0);\n"
+    "        gl_FragColor = mix(gl_Fog.color, color, fogFactor);\n"
+    "    } else {\n"
+    "        gl_FragColor = color;\n"
+    "    }\n"
+    "}\n";
+
+// ---------------------------------------------------------------------------
+// Shader globals
+// ---------------------------------------------------------------------------
+GLuint g_shader_program = 0;
+GLuint g_vert_shader    = 0;
+GLuint g_frag_shader    = 0;
+
+GLint  g_loc_useTexture   = -1;
+GLint  g_loc_useAlphaTest = -1;
+GLint  g_loc_alphaTestRef = -1;
+GLint  g_loc_useFog       = -1;
+GLint  g_loc_tex          = -1;
+
+bool  g_shaderEnabled    = false;
+bool  g_texture2DEnabled = false;
+bool  g_alphaTestEnabled = false;
+float g_alphaTestRef     = 0.1f;
+bool  g_fogEnabled       = false;
+
+// ---------------------------------------------------------------------------
+// Helper: compile a single shader stage and print errors if any
+// ---------------------------------------------------------------------------
+static GLuint compileShader(GLenum type, const char* src) {
+    GLuint id = glCreateShader(type);
+    glShaderSource(id, 1, &src, nullptr);
+    glCompileShader(id);
+
+    GLint ok = 0;
+    glGetShaderiv(id, GL_COMPILE_STATUS, &ok);
+    if (!ok) {
+        char log[2048];
+        glGetShaderInfoLog(id, sizeof(log), nullptr, log);
+        const char* typeName = (type == GL_VERTEX_SHADER) ? "VERTEX" : "FRAGMENT";
+        fprintf(stderr, "[shader] %s compile error:\n%s\n", typeName, log);
+    }
+    return id;
+}
+
+// ---------------------------------------------------------------------------
+// shaderInit  — call once from glInit() on desktop platforms
+// ---------------------------------------------------------------------------
+void shaderInit() {
+    g_vert_shader = compileShader(GL_VERTEX_SHADER,   s_vertSrc);
+    g_frag_shader = compileShader(GL_FRAGMENT_SHADER, s_fragSrc);
+
+    g_shader_program = glCreateProgram();
+    glAttachShader(g_shader_program, g_vert_shader);
+    glAttachShader(g_shader_program, g_frag_shader);
+    glLinkProgram(g_shader_program);
+
+    GLint ok = 0;
+    glGetProgramiv(g_shader_program, GL_LINK_STATUS, &ok);
+    if (!ok) {
+        char log[2048];
+        glGetProgramInfoLog(g_shader_program, sizeof(log), nullptr, log);
+        fprintf(stderr, "[shader] link error:\n%s\n", log);
+        return;
+    }
+
+    // Cache uniform locations
+    g_loc_useTexture   = glGetUniformLocation(g_shader_program, "useTexture");
+    g_loc_useAlphaTest = glGetUniformLocation(g_shader_program, "useAlphaTest");
+    g_loc_alphaTestRef = glGetUniformLocation(g_shader_program, "alphaTestRef");
+    g_loc_useFog       = glGetUniformLocation(g_shader_program, "useFog");
+    g_loc_tex          = glGetUniformLocation(g_shader_program, "tex");
+
+    // Bind shader and seed all uniforms with initial state
+    glUseProgram(g_shader_program);
+    g_shaderEnabled = true;
+
+    if (g_loc_tex          >= 0) glUniform1i(g_loc_tex,          0);
+    if (g_loc_useTexture   >= 0) glUniform1i(g_loc_useTexture,   g_texture2DEnabled ? 1 : 0);
+    if (g_loc_useAlphaTest >= 0) glUniform1i(g_loc_useAlphaTest, g_alphaTestEnabled ? 1 : 0);
+    if (g_loc_alphaTestRef >= 0) glUniform1f(g_loc_alphaTestRef, g_alphaTestRef);
+    if (g_loc_useFog       >= 0) glUniform1i(g_loc_useFog,       g_fogEnabled ? 1 : 0);
+
+    fprintf(stderr, "[shader] world shader compiled and active\n");
+}
+
+// ---------------------------------------------------------------------------
+// shaderBind / shaderUnbind — call around 3-D world rendering if needed
+// ---------------------------------------------------------------------------
+void shaderBind() {
+    if (g_shader_program) {
+        glUseProgram(g_shader_program);
+        g_shaderEnabled = true;
+    }
+}
+
+void shaderUnbind() {
+    glUseProgram(0);
+    g_shaderEnabled = false;
+}
+
+// ---------------------------------------------------------------------------
+// glEnable_shader / glDisable_shader — intercept glEnable2/glDisable2 calls
+// ---------------------------------------------------------------------------
+void glEnable_shader(GLenum cap) {
+    glEnable(cap);
+    if (!g_shaderEnabled) return;
+
+    if (cap == GL_TEXTURE_2D) {
+        g_texture2DEnabled = true;
+        if (g_loc_useTexture >= 0) glUniform1i(g_loc_useTexture, 1);
+    } else if (cap == GL_ALPHA_TEST) {
+        g_alphaTestEnabled = true;
+        if (g_loc_useAlphaTest >= 0) glUniform1i(g_loc_useAlphaTest, 1);
+        if (g_loc_alphaTestRef >= 0) glUniform1f(g_loc_alphaTestRef, g_alphaTestRef);
+    } else if (cap == GL_FOG) {
+        g_fogEnabled = true;
+        if (g_loc_useFog >= 0) glUniform1i(g_loc_useFog, 1);
+    }
+}
+
+void glDisable_shader(GLenum cap) {
+    glDisable(cap);
+    if (!g_shaderEnabled) return;
+
+    if (cap == GL_TEXTURE_2D) {
+        g_texture2DEnabled = false;
+        if (g_loc_useTexture >= 0) glUniform1i(g_loc_useTexture, 0);
+    } else if (cap == GL_ALPHA_TEST) {
+        g_alphaTestEnabled = false;
+        if (g_loc_useAlphaTest >= 0) glUniform1i(g_loc_useAlphaTest, 0);
+    } else if (cap == GL_FOG) {
+        g_fogEnabled = false;
+        if (g_loc_useFog >= 0) glUniform1i(g_loc_useFog, 0);
+    }
+}
+
+// ---------------------------------------------------------------------------
+// glAlphaFunc_shader — intercept glAlphaFunc / glAlphaFunc2 calls
+// ---------------------------------------------------------------------------
+void glAlphaFunc_shader(GLenum func, GLclampf ref) {
+    glAlphaFunc(func, ref);   // real GL call (macro undefined at top of this .cpp)
+    g_alphaTestRef = (float)ref;
+    if (g_shaderEnabled && g_loc_alphaTestRef >= 0) {
+        glUniform1f(g_loc_alphaTestRef, g_alphaTestRef);
+    }
+}
+
+#endif // MACOS || LINUX
 
 static const float __glPi = 3.14159265358979323846f;
 
@@ -43,6 +233,7 @@ void glInit()
 	GLenum err = glewInit();
 	printf("Err: %d\n", err);
 #endif
+
 }
 
 void anGenBuffers(GLsizei n, GLuint* buffers) {

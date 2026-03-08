@@ -12,20 +12,31 @@ SDL2_LIBS    := $(shell sdl2-config --libs)
 PNG_CFLAGS   := $(shell pkg-config --cflags libpng 2>/dev/null || echo "-I/opt/homebrew/include")
 PNG_LIBS     := $(shell pkg-config --libs   libpng 2>/dev/null || echo "-lpng")
 
+# ── Build mode (debug|release) ────────────────────────────────────────────────
+# Usage:  make              (debug, with ASAN+UBSAN)
+#         make BUILD=release (optimised, no sanitizers)
+BUILD ?= debug
+
+ifeq ($(BUILD),release)
+  OPT_FLAGS := -O2 -DNDEBUG
+  SAN_FLAGS :=
+else
+  OPT_FLAGS := -O0 -g
+  SAN_FLAGS := -fsanitize=address,undefined -fno-omit-frame-pointer
+endif
+
 # ── Compiler flags ────────────────────────────────────────────────────────────
 CFLAGS := \
 	-DMACOS \
 	-DPOSIX \
-	-DGFX_SMALLER_CHUNKS \
 	$(SDL2_CFLAGS) \
 	$(PNG_CFLAGS) \
 	-I$(SRCDIR) \
 	-I$(SRCDIR)/raknet \
-	-std=c++11 \
-	-O0 -g \
+	-std=c++17 \
+	$(OPT_FLAGS) \
+	$(SAN_FLAGS) \
 	-Wno-deprecated-declarations \
-	-Wno-c++11-extensions \
-	-Wno-c++11-narrowing \
 	-Wno-reserved-user-defined-literal \
 	-Wno-unused-variable \
 	-Wno-reorder \
@@ -33,7 +44,9 @@ CFLAGS := \
 	-Wno-writable-strings \
 	-Wno-invalid-source-encoding \
 	-Wno-unused-private-field \
-	-Wno-tautological-compare
+	-Wno-tautological-compare \
+	-Wno-narrowing \
+	-Wno-register
 
 # ── Linker flags ──────────────────────────────────────────────────────────────
 LDFLAGS := \
@@ -43,7 +56,8 @@ LDFLAGS := \
 	-framework OpenAL \
 	-framework Foundation \
 	-lpthread \
-	-lz
+	-lz \
+	$(SAN_FLAGS)
 
 # ── Game source files (mirrors the Raspberry Pi Makefile) ────────────────────
 GAME_SOURCES := \
@@ -84,6 +98,7 @@ GAME_SOURCES := \
 	$(SRCDIR)/client/gui/components/OptionsItem.cpp \
 	$(SRCDIR)/client/gui/components/OptionsGroup.cpp \
 	$(SRCDIR)/client/gui/components/OptionsPane.cpp \
+	$(SRCDIR)/client/gui/components/TextBox.cpp \
 	$(SRCDIR)/client/gui/Font.cpp \
 	$(SRCDIR)/client/gui/Gui.cpp \
 	$(SRCDIR)/client/gui/GuiComponent.cpp \
@@ -307,23 +322,27 @@ OBJCXX_SOURCES := \
 SOURCES := $(GAME_SOURCES) $(RAKNET_SOURCES)
 OBJECTS := $(patsubst $(SRCDIR)/%.cpp, obj/%.o, $(SOURCES)) \
            $(patsubst $(SRCDIR)/%.mm, obj/%.o, $(OBJCXX_SOURCES))
+ALL_OBJECTS := $(OBJECTS)
 
 # ── Targets ───────────────────────────────────────────────────────────────────
 .PHONY: all clean
 
 all: $(MODULE)
 
-$(MODULE): $(OBJECTS)
-	$(CC) $(OBJECTS) $(LDFLAGS) -o $@
+$(MODULE): $(ALL_OBJECTS)
+	$(CC) $(ALL_OBJECTS) $(LDFLAGS) -o $@
 
 obj/%.o: $(SRCDIR)/%.cpp
 	@mkdir -p $(@D)
-	$(CC) -c $(CFLAGS) $< -o $@
+	$(CC) -c $(CFLAGS) -MMD -MP $< -o $@
 
 # Objective-C++ rule
 obj/%.o: $(SRCDIR)/%.mm
 	@mkdir -p $(@D)
-	$(CC) -c $(CFLAGS) -ObjC++ $< -o $@
+	$(CC) -c $(CFLAGS) -ObjC++ -MMD -MP $< -o $@
+
+# Include auto-generated header dependency files
+-include $(ALL_OBJECTS:.o=.d)
 
 clean:
 	rm -rf obj $(MODULE)

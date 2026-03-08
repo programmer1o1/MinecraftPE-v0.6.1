@@ -8,6 +8,8 @@
 #include "EmptyLevelChunk.h"
 #include "../Level.h"
 #include "../LevelConstants.h"
+#include <unordered_map>
+#include <cstdint>
 
 class ChunkCache: public ChunkSource {
     //static const int CHUNK_CACHE_WIDTH = CHUNK_CACHE_WIDTH; // WAS 32;
@@ -22,40 +24,35 @@ public:
 		source(source_)
 	{
 		isChunkCache = true;
-        //emptyChunk = new EmptyLevelChunk(level_, emptyChunkBlocks, 0, 0);
 		emptyChunk = new EmptyLevelChunk(level_, NULL, 0, 0);
-		memset(chunks, 0, sizeof(LevelChunk*) * CHUNK_CACHE_WIDTH * CHUNK_CACHE_WIDTH);
     }
 
 	~ChunkCache() {
 		delete source;
 		delete emptyChunk;
-
-		for (int i = 0; i < CHUNK_CACHE_WIDTH * CHUNK_CACHE_WIDTH; i++)
-		{
-			if (chunks[i])
-			{
-				chunks[i]->deleteBlockData();
-				delete chunks[i];
+		for (auto& kv : chunks) {
+			if (kv.second && kv.second != emptyChunk) {
+				kv.second->deleteBlockData();
+				delete kv.second;
 			}
 		}
 	}
 
+	static int64_t chunkKey(int x, int z) {
+		return ((int64_t)(uint32_t)x << 32) | (uint32_t)z;
+	}
+
     bool fits(int x, int z) {
+        if (level->isInfinite()) return true;
         return (x >= 0 && z >= 0 && x < CHUNK_CACHE_WIDTH && z < CHUNK_CACHE_WIDTH);
     }
 
     bool hasChunk(int x, int z) {
-		// with a fixed world size, chunks outside the fitting area are always available (emptyChunks)
         if (!fits(x, z)) return true;
-
-        if (x == xLast && z == zLast && last != NULL) {
-            return true;
-        }
-        int xs = x & (CHUNK_CACHE_WIDTH - 1);
-        int zs = z & (CHUNK_CACHE_WIDTH - 1);
-        int slot = xs + zs * CHUNK_CACHE_WIDTH;
-        return chunks[slot] != NULL && (chunks[slot] == emptyChunk || chunks[slot]->isAt(x, z));
+        if (x == xLast && z == zLast && last != NULL) return true;
+        int64_t key = chunkKey(x, z);
+        auto it = chunks.find(key);
+        return it != chunks.end() && (it->second == emptyChunk || it->second->isAt(x, z));
     }
 
     LevelChunk* create(int x, int z) {
@@ -63,74 +60,51 @@ public:
     }
 
     LevelChunk* getChunk(int x, int z) {
-		//static Stopwatch sw;
-		//sw.start();
-
-		if (x == xLast && z == zLast && last != NULL) {
-            return last;
-        }
+		if (x == xLast && z == zLast && last != NULL) return last;
 		if (!fits(x, z)) return emptyChunk;
-        //if (!level->isFindingSpawn && !fits(x, z)) return emptyChunk;
-        int xs = x & (CHUNK_CACHE_WIDTH - 1);
-        int zs = z & (CHUNK_CACHE_WIDTH - 1);
-        int slot = xs + zs * CHUNK_CACHE_WIDTH;
-        if (!hasChunk(x, z)) {
-            if (chunks[slot] != NULL) {
-                chunks[slot]->unload();
-                save(chunks[slot]);
-                saveEntities(chunks[slot]);
-            }
 
+        int64_t key = chunkKey(x, z);
+        if (!hasChunk(x, z)) {
+            // No eviction needed — hash map holds each (x,z) independently
             LevelChunk* newChunk = load(x, z);
 			bool updateLights = false;
             if (newChunk == NULL) {
-                if (source == NULL) {
-                    newChunk = emptyChunk;
-                } else {
-                    newChunk = source->getChunk(x, z);
-                }
+                if (source == NULL) newChunk = emptyChunk;
+                else newChunk = source->getChunk(x, z);
             } else {
-				//return emptyChunk;
 				updateLights = true;
             }
-            chunks[slot] = newChunk;
+            chunks[key] = newChunk;
             newChunk->lightLava();
 
-			if (updateLights)
-			{
-				for (int cx = 0; cx < 16; cx++)
-				{
-					for (int cz = 0; cz < 16; cz++)
-					{
+			if (updateLights) {
+				for (int cx = 0; cx < 16; cx++) {
+					for (int cz = 0; cz < 16; cz++) {
 						int height = level->getHeightmap(cx + x * 16, cz + z * 16);
-						for (int cy = height; cy >= 0; cy--)
-						{
+						for (int cy = height; cy >= 0; cy--) {
 							level->updateLight(LightLayer::Sky, cx + x * 16, cy, cz + z * 16, cx + x * 16, cy, cz + z * 16);
 							level->updateLight(LightLayer::Block, cx + x * 16 - 1, cy, cz + z * 16 - 1, cx + x * 16 + 1, cy, cz + z * 16 + 1);
 						}
 					}
 				}
-				//level->updateLight(LightLayer::Sky, x * 16, 0, z * 16, x * 16 + 15, 128, z * 16 + 15);
-				//level->updateLight(LightLayer::Block, x * 16, 0, z * 16, x * 16 + 15, 128, z * 16 + 15);
 			}
 
-            if (chunks[slot] != NULL) {
-                chunks[slot]->load();
-            }
+            LevelChunk* stored = chunks[key];
+            if (stored != NULL) stored->load();
 
-            if (!chunks[slot]->terrainPopulated && hasChunk(x + 1, z + 1) && hasChunk(x, z + 1) && hasChunk(x + 1, z)) postProcess(this, x, z);
+            // Tell the renderer (via LevelListener) that this chunk's blocks exist now,
+            // so it rebuilds the faces at the boundary with already-rendered neighbours.
+            level->setTilesDirty(x * 16, 0, z * 16, x * 16 + 15, 127, z * 16 + 15);
+
+            if (!chunks[key]->terrainPopulated && hasChunk(x + 1, z + 1) && hasChunk(x, z + 1) && hasChunk(x + 1, z)) postProcess(this, x, z);
             if (hasChunk(x - 1, z) && !getChunk(x - 1, z)->terrainPopulated && hasChunk(x - 1, z + 1) && hasChunk(x, z + 1) && hasChunk(x - 1, z)) postProcess(this, x - 1, z);
             if (hasChunk(x, z - 1) && !getChunk(x, z - 1)->terrainPopulated && hasChunk(x + 1, z - 1) && hasChunk(x, z - 1) && hasChunk(x + 1, z)) postProcess(this, x, z - 1);
             if (hasChunk(x - 1, z - 1) && !getChunk(x - 1, z - 1)->terrainPopulated && hasChunk(x - 1, z - 1) && hasChunk(x, z - 1) && hasChunk(x - 1, z)) postProcess(this, x - 1, z - 1);
         }
         xLast = x;
         zLast = z;
-        last = chunks[slot];
-
-		//sw.stop();
-		//sw.printEvery(500000, "ChunkCache::load: ");
-
-        return chunks[slot];
+        last = chunks[key];
+        return chunks[key];
     }
 
 	Biome::MobList getMobsAt(const MobCategory& mobCategory, int x, int y, int z) {
@@ -198,33 +172,24 @@ public:
 	
 	void saveAll(bool onlyUnsaved) {
 		if (storage != NULL) {
-			std::vector<LevelChunk*> chunks;
-			for (int z = 0; z < CHUNK_CACHE_WIDTH; ++z)
-			for (int x = 0; x < CHUNK_CACHE_WIDTH; ++x) {
-				LevelChunk* chunk = level->getChunk(x, z);
-				if (!onlyUnsaved || chunk->shouldSave(false))
-					chunks.push_back( chunk );
+			std::vector<LevelChunk*> chunkList;
+			for (auto& kv : chunks) {
+				LevelChunk* chunk = kv.second;
+				if (chunk && chunk != emptyChunk)
+					if (!onlyUnsaved || chunk->shouldSave(false))
+						chunkList.push_back(chunk);
 			}
-			storage->saveAll(level, chunks);
+			storage->saveAll(level, chunkList);
 		}
 	}
 private:
     LevelChunk* load(int x, int z) {
-        if (storage == NULL) return emptyChunk;
-		if (x < 0 || x >= CHUNK_CACHE_WIDTH || z < 0 || z >= CHUNK_CACHE_WIDTH)
-		{
-			return emptyChunk;
-		}
-        //try {
-            LevelChunk* levelChunk = storage->load(level, x, z);
-            if (levelChunk != NULL) {
-                levelChunk->lastSaveTime = level->getTime();
-            }
-            return levelChunk;
-        //} catch (Exception e) {
-        //    e.printStackTrace();
-        //    return emptyChunk;
-        //}
+        if (storage == NULL) return NULL;
+        LevelChunk* levelChunk = storage->load(level, x, z);
+        if (levelChunk != NULL) {
+            levelChunk->lastSaveTime = level->getTime();
+        }
+        return levelChunk;
     }
 
     void saveEntities(LevelChunk* levelChunk) {
@@ -250,11 +215,10 @@ public:
 	int xLast;
     int zLast;
 private:
-	//unsigned char emptyChunkBlocks[LevelChunk::ChunkBlockCount];
     LevelChunk* emptyChunk;
     ChunkSource* source;
     ChunkStorage* storage;
-    LevelChunk* chunks[CHUNK_CACHE_WIDTH * CHUNK_CACHE_WIDTH];
+    std::unordered_map<int64_t, LevelChunk*> chunks;
     Level* level;
 
     LevelChunk* last;

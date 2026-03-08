@@ -31,6 +31,46 @@ static int   g_mouseY = 0;
 static SDL_Window*   g_sdlWindow  = NULL;
 static SDL_GLContext g_glContext   = NULL;
 
+// ----------------------------------------------------------------------------
+// Gamepad state
+// ----------------------------------------------------------------------------
+static SDL_GameController* g_controller = NULL;
+
+// Deadzone threshold (SDL axis range: -32768 to 32767)
+static const int CONTROLLER_DEADZONE = 8000;
+
+// Right stick axis values — updated from SDL_CONTROLLERAXISMOTION events,
+// consumed every frame in the main loop to produce smooth camera movement.
+static float g_rightStickX = 0.0f;
+static float g_rightStickY = 0.0f;
+
+// Sensitivity multiplier for the right stick → mouse-look mapping.
+// Tune this value to taste (higher = faster camera).
+static const float STICK_LOOK_SCALE = 8.0f;
+
+// Track which virtual keys are currently held down by the gamepad so we can
+// release them cleanly when the button/stick is released.
+static bool g_padW = false, g_padA = false, g_padS = false, g_padD = false;
+
+// Track trigger press state to generate click down/up pairs.
+static bool g_triggerLeft  = false; // left trigger  → left click  (mine/attack)
+static bool g_triggerRight = false; // right trigger → right click (place/use)
+
+// Apply deadzone and normalise an axis value to [-1, 1].
+// Returns 0 when the axis is within the dead zone.
+static float applyDeadzone(Sint16 raw) {
+    if (raw >  CONTROLLER_DEADZONE) return  (raw - CONTROLLER_DEADZONE) / (float)(32767 - CONTROLLER_DEADZONE);
+    if (raw < -CONTROLLER_DEADZONE) return  (raw + CONTROLLER_DEADZONE) / (float)(32767 - CONTROLLER_DEADZONE);
+    return 0.0f;
+}
+
+// Press or release a game key only when the state actually changes.
+static void setGameKey(unsigned char key, bool& tracked, bool pressed) {
+    if (pressed == tracked) return;
+    tracked = pressed;
+    Keyboard::feed(key, pressed ? 1 : 0);
+}
+
 // Map SDL2 keycodes to the game's internal key codes (matching main_rpi.h mapping)
 static unsigned char transformKey(SDL_Keycode key) {
     switch (key) {
@@ -107,6 +147,155 @@ static int handleEvents(App* app) {
                 }
                 break;
             }
+
+            // ----------------------------------------------------------------
+            // Gamepad device connect / disconnect
+            // ----------------------------------------------------------------
+            case SDL_CONTROLLERDEVICEADDED: {
+                if (!g_controller) {
+                    g_controller = SDL_GameControllerOpen(event.cdevice.which);
+                    if (g_controller)
+                        printf("[gamepad] Controller connected: %s\n",
+                               SDL_GameControllerName(g_controller));
+                }
+                break;
+            }
+            case SDL_CONTROLLERDEVICEREMOVED: {
+                if (g_controller) {
+                    SDL_GameController* removed =
+                        SDL_GameControllerFromInstanceID(event.cdevice.which);
+                    if (removed == g_controller) {
+                        printf("[gamepad] Controller disconnected.\n");
+                        SDL_GameControllerClose(g_controller);
+                        g_controller = NULL;
+                        // Release any gamepad-held keys/buttons
+                        if (g_padW) { Keyboard::feed(Keyboard::KEY_W, 0); g_padW = false; }
+                        if (g_padA) { Keyboard::feed(Keyboard::KEY_A, 0); g_padA = false; }
+                        if (g_padS) { Keyboard::feed(Keyboard::KEY_S, 0); g_padS = false; }
+                        if (g_padD) { Keyboard::feed(Keyboard::KEY_D, 0); g_padD = false; }
+                        if (g_triggerLeft)  { Mouse::feed(1, 0, g_mouseX, g_mouseY); g_triggerLeft  = false; }
+                        if (g_triggerRight) { Mouse::feed(2, 0, g_mouseX, g_mouseY); g_triggerRight = false; }
+                        g_rightStickX = g_rightStickY = 0.0f;
+                    }
+                }
+                break;
+            }
+
+            // ----------------------------------------------------------------
+            // Gamepad button press / release
+            // ----------------------------------------------------------------
+            case SDL_CONTROLLERBUTTONDOWN:
+            case SDL_CONTROLLERBUTTONUP: {
+                bool down = (event.type == SDL_CONTROLLERBUTTONDOWN);
+                int  val  = down ? 1 : 0;
+                switch (event.cbutton.button) {
+                    // Face buttons
+                    case SDL_CONTROLLER_BUTTON_A:
+                        Keyboard::feed(Keyboard::KEY_SPACE, val);      // jump
+                        break;
+                    case SDL_CONTROLLER_BUTTON_B:
+                        Keyboard::feed(Keyboard::KEY_ESCAPE, val);     // pause / back
+                        break;
+                    case SDL_CONTROLLER_BUTTON_X:
+                        Mouse::feed(1, (char)val, g_mouseX, g_mouseY); // left click (mine)
+                        break;
+                    case SDL_CONTROLLER_BUTTON_Y:
+                        Mouse::feed(2, (char)val, g_mouseX, g_mouseY); // right click (place)
+                        break;
+
+                    // Shoulder buttons — hotbar scroll (fire once on press)
+                    case SDL_CONTROLLER_BUTTON_LEFTSHOULDER:
+                        if (down)
+                            Mouse::feed(3, 1, g_mouseX, g_mouseY, 0,  1); // scroll left
+                        break;
+                    case SDL_CONTROLLER_BUTTON_RIGHTSHOULDER:
+                        if (down)
+                            Mouse::feed(3, 1, g_mouseX, g_mouseY, 0, -1); // scroll right
+                        break;
+
+                    // D-pad
+                    case SDL_CONTROLLER_BUTTON_DPAD_UP:
+                        Keyboard::feed(Keyboard::KEY_W, val);
+                        break;
+                    case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
+                        Keyboard::feed(Keyboard::KEY_S, val);
+                        break;
+                    case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
+                        Keyboard::feed(Keyboard::KEY_A, val);
+                        break;
+                    case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
+                        Keyboard::feed(Keyboard::KEY_D, val);
+                        break;
+
+                    // Menu buttons
+                    case SDL_CONTROLLER_BUTTON_START:
+                        Keyboard::feed(Keyboard::KEY_ESCAPE, val);     // pause
+                        break;
+                    case SDL_CONTROLLER_BUTTON_BACK:
+                        Keyboard::feed(Keyboard::KEY_E, val);          // inventory
+                        break;
+
+                    default:
+                        break;
+                }
+                break;
+            }
+
+            // ----------------------------------------------------------------
+            // Gamepad axis motion
+            // ----------------------------------------------------------------
+            case SDL_CONTROLLERAXISMOTION: {
+                Sint16 raw = event.caxis.value;
+                float  v   = applyDeadzone(raw);
+
+                switch (event.caxis.axis) {
+                    // Left stick X → A/D (strafe)
+                    case SDL_CONTROLLER_AXIS_LEFTX:
+                        setGameKey(Keyboard::KEY_A, g_padA, v < -0.3f);
+                        setGameKey(Keyboard::KEY_D, g_padD, v >  0.3f);
+                        break;
+
+                    // Left stick Y → W/S (forward/back) — axis positive = down
+                    case SDL_CONTROLLER_AXIS_LEFTY:
+                        setGameKey(Keyboard::KEY_W, g_padW, v < -0.3f);
+                        setGameKey(Keyboard::KEY_S, g_padS, v >  0.3f);
+                        break;
+
+                    // Right stick — accumulate for smooth per-frame camera input
+                    case SDL_CONTROLLER_AXIS_RIGHTX:
+                        g_rightStickX = v;
+                        break;
+                    case SDL_CONTROLLER_AXIS_RIGHTY:
+                        g_rightStickY = v;
+                        break;
+
+                    // Left trigger (axis 4) → left click (mine/attack)
+                    case SDL_CONTROLLER_AXIS_TRIGGERLEFT: {
+                        // Trigger range: 0..32767; treat >25% as pressed
+                        bool pressed = (raw > 8192);
+                        if (pressed != g_triggerLeft) {
+                            g_triggerLeft = pressed;
+                            Mouse::feed(1, (char)(pressed ? 1 : 0), g_mouseX, g_mouseY);
+                        }
+                        break;
+                    }
+
+                    // Right trigger (axis 5) → right click (place/use)
+                    case SDL_CONTROLLER_AXIS_TRIGGERRIGHT: {
+                        bool pressed = (raw > 8192);
+                        if (pressed != g_triggerRight) {
+                            g_triggerRight = pressed;
+                            Mouse::feed(2, (char)(pressed ? 1 : 0), g_mouseX, g_mouseY);
+                        }
+                        break;
+                    }
+
+                    default:
+                        break;
+                }
+                break;
+            }
+
             default:
                 break;
         }
@@ -115,7 +304,7 @@ static int handleEvents(App* app) {
 }
 
 int main(int argc, char** argv) {
-    if (SDL_Init(SDL_INIT_VIDEO) < 0) {
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER) < 0) {
         printf("Couldn't initialize SDL: %s\n", SDL_GetError());
         return -1;
     }
@@ -166,6 +355,16 @@ int main(int argc, char** argv) {
         chdir(binPath.c_str());
     }
 
+    // Open any already-connected controllers (plugged in before launch)
+    for (int i = 0; i < SDL_NumJoysticks(); ++i) {
+        if (SDL_IsGameController(i) && !g_controller) {
+            g_controller = SDL_GameControllerOpen(i);
+            if (g_controller)
+                printf("[gamepad] Controller opened at startup: %s\n",
+                       SDL_GameControllerName(g_controller));
+        }
+    }
+
     MAIN_CLASS* app = new MAIN_CLASS();
 
     // Store saves in ~/.local/share/minecraft/ (XDG base dir standard)
@@ -195,6 +394,20 @@ int main(int argc, char** argv) {
         if (handleEvents(app) != 0)
             break;
 
+        // Right stick → per-frame camera look (smooth, continuous)
+        if (g_controller && (g_rightStickX != 0.0f || g_rightStickY != 0.0f)) {
+            short dx = (short)(g_rightStickX * STICK_LOOK_SCALE);
+            short dy = (short)(g_rightStickY * STICK_LOOK_SCALE);
+            if (dx != 0 || dy != 0) {
+                // Feed as a mouse-move event with relative deltas only;
+                // keep the reported absolute position at the screen centre so
+                // the crosshair stays fixed while the controller is in use.
+                short cx = (short)(g_width  / 2);
+                short cy = (short)(g_height / 2);
+                Mouse::feed(0, 0, cx, cy, dx, dy);
+            }
+        }
+
         app->update();
 
         // On Linux with NO_EGL, App::swapBuffers() is a no-op, so we swap here.
@@ -203,6 +416,11 @@ int main(int argc, char** argv) {
 
     delete app;
     context.platform->finish();
+
+    if (g_controller) {
+        SDL_GameControllerClose(g_controller);
+        g_controller = NULL;
+    }
 
     SDL_GL_DeleteContext(g_glContext);
     SDL_DestroyWindow(g_sdlWindow);

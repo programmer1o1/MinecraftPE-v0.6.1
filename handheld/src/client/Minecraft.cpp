@@ -17,6 +17,7 @@
 #include "../world/level/tile/Tile.h"
 #include "../world/level/storage/LevelStorageSource.h"
 #include "../world/level/storage/LevelStorage.h"
+#include "../world/level/storage/ExternalFileLevelStorage.h"
 #include "player/input/KeyboardInput.h"
 #ifndef STANDALONE_SERVER
 #include "player/input/touchscreen/TouchInputHolder.h"
@@ -387,6 +388,16 @@ void Minecraft::prepareLevel(const std::string& title) {
     }
 	A.stop();
 	level->setUpdateLights(true);
+
+	// All chunks have been loaded from the region file. Release the in-memory
+	// file cache that was populated by ExternalFileLevelStorage::load() on the
+	// first chunk access, freeing the RAM now that sequential reads are done.
+	{
+		ExternalFileLevelStorage* efls =
+			dynamic_cast<ExternalFileLevelStorage*>(level->getLevelStorage());
+		if (efls)
+			efls->finishPreload();
+	}
 
 	C.start();
 	for (int x = 0; x < CHUNK_CACHE_WIDTH; x++)
@@ -1178,6 +1189,16 @@ void Minecraft::init()
 
 	user = new User("TestUser", "");
 	setIsCreativeMode(false); // false means it's Survival Mode
+
+#ifdef ANDROID
+	if (!externalStoragePath.empty()) {
+		options.setSettingsPath(externalStoragePath + "/games/com.mojang/options.txt");
+	}
+#elif defined(MACOS) || defined(LINUX)
+	if (!externalStoragePath.empty()) {
+		options.setSettingsPath(externalStoragePath + "options.txt");
+	}
+#endif
 	reloadOptions();
 
 }
@@ -1207,6 +1228,14 @@ void Minecraft::setSize(int w, int h) {
 		Gui::GuiScale = 2.0f;
 	else
 		Gui::GuiScale = 1.0f;
+
+	// Apply user GUI scale override: 0=auto, 1=small (0.5x), 2=normal (1x), 3=large (1.5x)
+	switch (options.guiScale) {
+		case 1: Gui::GuiScale = std::max(1.0f, Gui::GuiScale * 0.5f); break;
+		case 2: break; // normal = auto
+		case 3: Gui::GuiScale = Gui::GuiScale * 1.5f; break;
+		default: break; // 0 = auto
+	}
 
 	Gui::InvGuiScale = 1.0f / Gui::GuiScale;
 	int screenWidth  = (int)(width  * Gui::InvGuiScale);
@@ -1579,5 +1608,7 @@ void Minecraft::optionUpdated( const Options::Option* option, float value ) {
 }
 
 void Minecraft::optionUpdated( const Options::Option* option, int value ) {
-
+	if (option == &Options::Option::GUI_SCALE) {
+		setSize(width, height);
+	}
 }

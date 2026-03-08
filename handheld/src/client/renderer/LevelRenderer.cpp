@@ -31,6 +31,7 @@
 /* static */ const int LevelRenderer::CHUNK_SIZE = 16;
 #endif
 
+
 LevelRenderer::LevelRenderer( Minecraft* mc)
 :	mc(mc),
 	textures(mc->textures),
@@ -65,12 +66,21 @@ LevelRenderer::LevelRenderer( Minecraft* mc)
 	destroyProgress(0)
 {
 #ifdef USE_VBO
-	int maxChunksWidth = 2 * LEVEL_WIDTH / CHUNK_SIZE + 1;
-	numListsOrBuffers = maxChunksWidth * maxChunksWidth * (128/CHUNK_SIZE) * 3;
+	// Pool must cover the largest possible dist. allChanged() caps dist at 1024 for
+	// macOS/Linux and 400 for other platforms. Use the per-platform cap to size exactly.
+#if defined(MACOS) || defined(LINUX) || defined(WIN32)
+	static const int MAX_RENDER_DIST = 1024;
+#else
+	static const int MAX_RENDER_DIST = 400;
+#endif
+	{
+		int maxW = MAX_RENDER_DIST / CHUNK_SIZE + 1;
+		numListsOrBuffers = maxW * maxW * (128/CHUNK_SIZE) * 3;
+	}
 	chunkBuffers = new GLuint[numListsOrBuffers];
 	glGenBuffers2(numListsOrBuffers, chunkBuffers);
 	LOGI("numBuffers: %d\n", numListsOrBuffers);
-#   ifdef OPENGL_ES
+#   if defined(OPENGL_ES) || defined(MACOS) || defined(LINUX)
 	glGenBuffers2(1, &skyBuffer);
 	generateSky();
 #   endif
@@ -90,7 +100,7 @@ LevelRenderer::~LevelRenderer()
 
 #ifdef USE_VBO
 	glDeleteBuffers(numListsOrBuffers, chunkBuffers);
-#   ifdef OPENGL_ES
+#   if defined(OPENGL_ES) || defined(MACOS) || defined(LINUX)
 	glDeleteBuffers(1, &skyBuffer);
 #   endif
 	delete[] chunkBuffers;
@@ -153,9 +163,11 @@ void LevelRenderer::allChanged()
 
 	Tile::leaves->setFancy(mc->options.fancyGraphics);
 	Tile::leaves_carried->setFancy(mc->options.fancyGraphics);
-	lastViewDistance = mc->options.viewDistance;
+	lastViewDistance = mc->options.viewDistance & 7; // clamp to [0,7] — 0=far, 7=tiny
 
-	int dist = (512 >> 3) << (3 - lastViewDistance);
+	// dist table: vd 0..7 → block distances (capped by maxChunksWidth in practice)
+	static const int DIST_TABLE[8] = {512, 256, 128, 64, 768, 1024, 1536, 2048};
+	int dist = DIST_TABLE[lastViewDistance];
 	if (lastViewDistance <= 2 && mc->isPowerVR())
 		dist = (int)((float)dist * 0.8f);
 	LOGI("last: %d, power: %d\n", lastViewDistance, mc->isPowerVR());
@@ -164,7 +176,11 @@ void LevelRenderer::allChanged()
 		dist *= 0.6f;
 	#endif
 
+#if defined(MACOS) || defined(LINUX) || defined(WIN32)
+	if (dist > 1024) dist = 1024;
+#else
 	if (dist > 400) dist = 400;
+#endif
 	/*
 	* if (Minecraft.FLYBY_MODE) { dist = 512 - CHUNK_SIZE * 2; }
 	*/
@@ -206,6 +222,7 @@ void LevelRenderer::allChanged()
 
 				chunks[c] = chunk;
 				sortedChunks[c] = chunk;
+				chunk->queued = true;
 				dirtyChunks.push_back(chunk);
 
 				id += 3;
@@ -226,6 +243,8 @@ void LevelRenderer::allChanged()
 
 void LevelRenderer::deleteChunks()
 {
+	if (!chunks) return;
+
 	for (int z = 0; z < zChunks; ++z)
 	for (int y = 0; y < yChunks; ++y)
 	for (int x = 0; x < xChunks; ++x) {
@@ -287,6 +306,7 @@ void LevelRenderer::resortChunks( int xc, int yc, int zc )
 				bool wasDirty = chunk->isDirty();
 				chunk->setPos(xx, yy, zz);
 				if (!wasDirty && chunk->isDirty()) {
+					chunk->queued = true;
 					dirtyChunks.push_back(chunk);
 					++dirty;
 				}
@@ -305,7 +325,8 @@ int LevelRenderer::render( Mob* player, int layer, float alpha )
 	for (int i = 0; i < 10; i++) {
 		chunkFixOffs = (chunkFixOffs + 1) % chunksLength;
 		Chunk* c = chunks[chunkFixOffs];
-		if (c->isDirty() && std::find(dirtyChunks.begin(), dirtyChunks.end(), c) == dirtyChunks.end()) {
+		if (c->isDirty() && !c->queued) {
+			c->queued = true;
 			dirtyChunks.push_back(c);
 		}
 	}
@@ -622,131 +643,30 @@ bool LevelRenderer::updateDirtyChunks( Mob* player, bool force )
 
 		return dirtyChunks.size() == 0;
 	} else {
-		const int count = 3;
+		static const float MaxFrameTime = 1.0f / 60.0f;
 
+		// Sort closest-first (DirtyChunkSorter is farthest-first, so closest ends up at back)
 		DirtyChunkSorter dirtyChunkSorter(player);
-		Chunk* toAdd[count] = {NULL};
-		std::vector<Chunk*>* nearChunks = NULL;
+		std::sort(dirtyChunks.begin(), dirtyChunks.end(), dirtyChunkSorter);
 
-		int pendingChunkSize = dirtyChunks.size();
-		int pendingChunkRemoved = 0;
-
-		for (int i = 0; i < pendingChunkSize; i++) {
-			Chunk* chunk = dirtyChunks[i];
-
-			if (!force) {
-				if (chunk->distanceToSqr(player) > 1024.0f) {
-					int index;
-
-					// is this chunk in the closest <count>?
-					for (index = 0; index < count; index++) {
-						if (toAdd[index] != NULL && dirtyChunkSorter(toAdd[index], chunk) == false) {
-							break;
-						}
-					}
-
-					index--;
-
-					if (index > 0) {
-						int x = index;
-						while (--x != 0) {
-							toAdd[x - 1] = toAdd[x];
-						}
-						toAdd[index] = chunk;
-					}
-
-					continue;
-				}
-			} else if (!chunk->visible) {
-				continue;
-			}
-
-			// chunk is very close -- always render
-
-			if (nearChunks == NULL) {
-				nearChunks = new std::vector<Chunk*>();
-			}
-
-			pendingChunkRemoved++;
-			nearChunks->push_back(chunk);
-			dirtyChunks[i] = NULL;
-		}
-
-		// if there are nearby chunks that need to be prepared for
-		// rendering, sort them and then process them
-		static const float MaxFrameTime = 1.0f / 100.0f;
 		Stopwatch chunkWatch;
 		chunkWatch.start();
 
-		if (nearChunks != NULL) {
-			if (nearChunks->size() > 1) {
-				std::sort(nearChunks->begin(), nearChunks->end(), dirtyChunkSorter);
-			}
-
-			for (int i = nearChunks->size() - 1; i >= 0; i--) {
-				Chunk* chunk = (*nearChunks)[i];
-				chunk->rebuild();
+		while (!dirtyChunks.empty()) {
+			Chunk* chunk = dirtyChunks.back();
+			if (force && !chunk->visible) {
+				dirtyChunks.pop_back();
 				chunk->setClean();
+				continue;
 			}
-			delete nearChunks;
+			float ttt = chunkWatch.stopContinue();
+			if (ttt >= MaxFrameTime) break;
+			chunk->rebuild();
+			chunk->setClean();
+			dirtyChunks.pop_back();
 		}
 
-		// render the nearest <count> chunks (farther than 1024 units away)
-		int secondaryRemoved = 0;
-
-		for (int i = count - 1; i >= 0; i--) {
-			Chunk* chunk = toAdd[i];
-			if (chunk != NULL) {
-
-				float ttt = chunkWatch.stopContinue();
-				if (ttt >= MaxFrameTime) {
-					//LOGI("Too much work, I quit2!\n");
-					break;
-				}
-
-				if (!chunk->visible && i != count - 1) {
-					// escape early if chunks aren't ready
-					toAdd[i] = NULL;
-					toAdd[0] = NULL;
-					break;
-				}
-				toAdd[i]->rebuild();
-				toAdd[i]->setClean();
-				secondaryRemoved++;
-			}
-		}
-
-		// compact by removing nulls
-		int cursor = 0;
-		int target = 0;
-		int arraySize = dirtyChunks.size();
-		while (cursor != arraySize) {
-			Chunk* chunk = dirtyChunks[cursor];
-			if (chunk != NULL) {
-				bool remove = false;
-                for (int i = 0; i < count && !remove; i++)
-                    if (chunk == toAdd[i]) {
-                        remove = true;
-                    }
-
-                if (!remove) {
-				//if (chunk == toAdd[0] || chunk == toAdd[1] || chunk == toAdd[2]) {
-				//	; // this chunk was rendered and should be removed
-				//} else {
-					if (target != cursor) {
-						dirtyChunks[target] = chunk;
-					}
-					target++;
-				}
-			}
-			cursor++;
-		}
-
-		// trim
-		if (cursor > target)
-			dirtyChunks.erase(dirtyChunks.begin() + target, dirtyChunks.end());
-
-		return pendingChunkSize == (pendingChunkRemoved + secondaryRemoved);
+		return dirtyChunks.empty();
 	}
 }
 
@@ -899,6 +819,7 @@ void LevelRenderer::skyColorChanged()
 	for (int i = 0; i < chunksLength; i++) {
 		if (chunks[i]->skyLit) {
 			if (!chunks[i]->isDirty()) {
+				chunks[i]->queued = true;
 				dirtyChunks.push_back(chunks[i]);
 				chunks[i]->setDirty();
 			}
@@ -1015,7 +936,7 @@ void LevelRenderer::renderSky(float alpha) {
     glEnable2(GL_FOG);
     glColor4f2(sr, sg, sb, 1.0f);
 
-#ifdef OPENGL_ES
+#if defined(OPENGL_ES) || defined(MACOS) || defined(LINUX)
 	drawArrayVT(skyBuffer, skyVertexCount);
 #endif
     glEnable2(GL_TEXTURE_2D);
@@ -1233,7 +1154,7 @@ void LevelRenderer::renderHitSelect( Player* player, const HitResult& h, int mod
 
 void LevelRenderer::onGraphicsReset()
 {
-#ifdef OPENGL_ES
+#if defined(OPENGL_ES) || defined(MACOS) || defined(LINUX)
 	generateSky();
 #endif
 

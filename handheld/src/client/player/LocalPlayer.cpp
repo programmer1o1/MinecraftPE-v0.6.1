@@ -78,8 +78,9 @@ void LocalPlayer::calculateFlight(float xa, float ya, float za) {
     if (Keyboard::isKeyDown(103)) ya = .2f * minecraft->options.flySpeed;
     if (Keyboard::isKeyDown(102)) ya = -.2f * minecraft->options.flySpeed;
 #else
-    if (Keyboard::isKeyDown(Keyboard::KEY_E)) ya = .2f * minecraft->options.flySpeed;
-    if (Keyboard::isKeyDown(Keyboard::KEY_Q)) ya = -.2f * minecraft->options.flySpeed;
+    // Space = fly up, Left Shift = fly down (matches Java Edition)
+    if (Keyboard::isKeyDown(minecraft->options.keyJump.key))  ya =  .2f * minecraft->options.flySpeed;
+    if (Keyboard::isKeyDown(minecraft->options.keySneak.key)) ya = -.2f * minecraft->options.flySpeed;
 #endif
 
     flyX = 10 * smoothFlyX.getNewDeltaValue(xa, .35f * minecraft->options.sensitivity);

@@ -71,6 +71,46 @@
 
 void anGenBuffers(GLsizei n, GLuint* buffer);
 
+// ── GLSL shader support (macOS / Linux desktop only) ──────────────────────
+#if defined(MACOS) || defined(LINUX)
+
+// Shader program & per-shader handles
+extern GLuint g_shader_program;
+extern GLuint g_vert_shader;
+extern GLuint g_frag_shader;
+
+// Cached uniform locations
+extern GLint g_loc_useTexture;
+extern GLint g_loc_useAlphaTest;
+extern GLint g_loc_alphaTestRef;
+extern GLint g_loc_useFog;
+extern GLint g_loc_tex;
+
+// Current GL state mirrored for uniform updates
+extern bool  g_shaderEnabled;
+extern bool  g_texture2DEnabled;
+extern bool  g_alphaTestEnabled;
+extern float g_alphaTestRef;
+extern bool  g_fogEnabled;
+
+void shaderInit();
+void shaderBind();
+void shaderUnbind();
+
+// Shader-aware overrides for glEnable/glDisable/glAlphaFunc
+void glEnable_shader(GLenum cap);
+void glDisable_shader(GLenum cap);
+void glAlphaFunc_shader(GLenum func, GLclampf ref);
+
+#else
+// Non-desktop: glAlphaFunc2 is just the raw GL call
+#define glAlphaFunc2 glAlphaFunc
+#endif // MACOS || LINUX
+
+#if defined(MACOS) || defined(LINUX)
+#define glAlphaFunc2 glAlphaFunc
+#endif
+
 #ifdef USE_VBO
 #define drawArrayVT_NoState drawArrayVT
 #define drawArrayVTC_NoState drawArrayVTC
@@ -161,6 +201,7 @@ int glhUnProjectf(	float winx, float winy, float winz,
 #else
 	#define glGetProcAddress(a) ((void*)(0))
 #endif
+
 
 
 

@@ -12,6 +12,7 @@ const char* OptionStrings::Graphics_AmbientOcclusion   = "gfx_ao";
 const char* OptionStrings::Graphics_RenderDistance     = "gfx_renderdistance";
 const char* OptionStrings::Graphics_GuiScale           = "gfx_guiscale";
 const char* OptionStrings::Graphics_ViewBobbing        = "gfx_viewbobbing";
+const char* OptionStrings::Graphics_FOV                = "gfx_fov";
 
 const char* OptionStrings::Controls_Sensitivity        = "ctrl_sensitivity";
 const char* OptionStrings::Controls_InvertMouse        = "ctrl_invertmouse";

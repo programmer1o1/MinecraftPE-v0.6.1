@@ -4,6 +4,8 @@
 //package net.minecraft.client.renderer;
 
 #include <map>
+#include <vector>
+#include <cstdint>
 #include "RenderChunk.h"
 #include "gles.h"
 #include "VertecDecl.h"
@@ -14,12 +16,15 @@ typedef VertexDeclPTC VERTEX;
 typedef std::map<GLuint, GLsizei> IntGLMap;
 
 
+class LevelRenderer; // forward declare for friend
+
 class Tesselator
 {
     static const int MAX_MEMORY_USE = 16 * 1024 * 1024;
     static const int MAX_FLOATS = MAX_MEMORY_USE / 4 / 2;
 
 	Tesselator(int size);
+	friend class LevelRenderer;  // allow LevelRenderer to construct _meshTesselator
 
 public:
 	static const int ACCESS_DYNAMIC = 1;
@@ -36,6 +41,12 @@ public:
     void begin(int mode);
 	void draw();
 	RenderChunk end(bool useMine, int bufferId);
+
+#if defined(MACOS) || defined(LINUX) || defined(WIN32)
+	// CPU-only tessellation: stores vertex data into outData / outVertexCount
+	// without issuing any GL calls. Safe to call from a background thread.
+	void endToCPU(std::vector<uint8_t>& outData, int& outVertexCount);
+#endif
 
 	void color(int c);
 	void color(int c, int alpha);
