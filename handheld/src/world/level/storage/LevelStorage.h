@@ -31,6 +31,7 @@ public:
 
 	virtual void saveGame(Level* level) {}
 	virtual void loadEntities(Level* level, LevelChunk* levelChunk) {}
+	virtual void finishPreload() {}
 
 	//void checkSession() throws LevelConflictException;
 	//PlayerIO getPlayerIO();

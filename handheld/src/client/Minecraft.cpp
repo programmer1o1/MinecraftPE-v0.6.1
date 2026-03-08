@@ -392,12 +392,7 @@ void Minecraft::prepareLevel(const std::string& title) {
 	// All chunks have been loaded from the region file. Release the in-memory
 	// file cache that was populated by ExternalFileLevelStorage::load() on the
 	// first chunk access, freeing the RAM now that sequential reads are done.
-	{
-		ExternalFileLevelStorage* efls =
-			dynamic_cast<ExternalFileLevelStorage*>(level->getLevelStorage());
-		if (efls)
-			efls->finishPreload();
-	}
+	level->getLevelStorage()->finishPreload();
 
 	C.start();
 	for (int x = 0; x < CHUNK_CACHE_WIDTH; x++)

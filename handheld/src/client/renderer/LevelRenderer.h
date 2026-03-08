@@ -118,8 +118,8 @@ private:
     int starList, skyList, darkList;
 
 	int numListsOrBuffers;
-	GLuint* chunkBuffers;
-	GLuint skyBuffer;
+	unsigned int* chunkBuffers;
+	unsigned int skyBuffer;
 	int skyVertexCount;
 
 //    /*public*/ std::vector<TileEntity*> renderableTileEntities;

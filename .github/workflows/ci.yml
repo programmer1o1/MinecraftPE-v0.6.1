@@ -196,3 +196,39 @@ jobs:
   # iOS      — requires Xcode + code signing; no public runner supports this cleanly.
   # Raspberry Pi — requires Broadcom VideoCore headers (/opt/vc/) which are not
   #               available on standard runners; cross-compile toolchain is niche.
+
+  # ── Publish release ────────────────────────────────────────────────────────
+  release:
+    name: Publish GitHub Release
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [macos, linux, win32, android, dedicated-server]
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts/
+
+      - name: Zip artifacts
+        run: |
+          cd artifacts
+          for dir in */; do
+            name="${dir%/}"
+            zip -r "../${name}.zip" "$dir"
+          done
+          cd ..
+
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="build-$(date -u +%Y%m%d-%H%M%S)-${GITHUB_SHA::7}"
+          TITLE="Build ${GITHUB_SHA::7} ($(date -u +%Y-%m-%d))"
+          gh release create "$TAG" *.zip \
+            --title "$TITLE" \
+            --notes "Automated build from commit ${GITHUB_SHA}." \
+            --latest
