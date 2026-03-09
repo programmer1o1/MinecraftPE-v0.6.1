@@ -7,32 +7,24 @@
 //
 
 #import <UIKit/UIKit.h>
+#import <MetalANGLE/MGLKit.h>
 
-#import <OpenGLES/ES1/gl.h>
-#import <OpenGLES/ES1/glext.h>
-#import <OpenGLES/ES2/gl.h>
-#import <OpenGLES/ES2/glext.h>
-
-@class EAGLContext;
-
-// This class wraps the CAEAGLLayer from CoreAnimation into a convenient UIView subclass.
-// The view content is basically an EAGL surface you render your OpenGL scene into.
-// Note that setting the view non-opaque will only work if the EAGL surface has an alpha channel.
+// This class wraps MGLLayer (MetalANGLE) into a convenient UIView subclass.
+// The view content is basically a GLES surface rendered via Metal under the hood.
 @interface EAGLView : UIView {
-    // The pixel dimensions of the CAEAGLLayer.
+    // The pixel dimensions of the MGLLayer.
     GLint framebufferWidth;
     GLint framebufferHeight;
-    
-    // The OpenGL ES names for the framebuffer and renderbuffer used to render to this view.
-    GLuint defaultFramebuffer;
 
+    // The OpenGL ES names for the framebuffer and renderbuffers.
+    GLuint defaultFramebuffer;
     GLuint colorRenderbuffer, _depthRenderBuffer;
-    
+
     @public
     GLfloat viewScale;
 }
 
-@property (nonatomic, retain) EAGLContext *context;
+@property (nonatomic, retain) MGLContext *context;
 
 - (void)setFramebuffer;
 - (BOOL)presentFramebuffer;

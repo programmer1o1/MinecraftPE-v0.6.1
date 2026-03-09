@@ -28,7 +28,7 @@
 #import "../../lib_projects/InAppSettingsKit/Views/IASKPSToggleSwitchSpecifierViewCell.h"
 
 @interface minecraftpeViewController ()
-@property (nonatomic, retain) EAGLContext *context;
+@property (nonatomic, retain) MGLContext *context;
 @property (nonatomic, assign) CADisplayLink *displayLink;
 - (BOOL) initView;
 - (BOOL) releaseView;
@@ -58,16 +58,16 @@ static NSThread* lastThread = nil;
 
 - (void)awakeFromNib
 {
-    EAGLContext *aContext = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES1];
-    
+    MGLContext *aContext = [[MGLContext alloc] initWithAPI:kMGLRenderingAPIOpenGLES1];
+
     if (!aContext)
-        NSLog(@"Failed to create ES context");
-    else if (![EAGLContext setCurrentContext:aContext])
-        NSLog(@"Failed to set ES context current");
-    
-	self.context = aContext;
-	[aContext release];
-	
+        NSLog(@"Failed to create MGL context");
+    else if (![MGLContext setCurrentContext:aContext])
+        NSLog(@"Failed to set MGL context current");
+
+    self.context = aContext;
+    [aContext release];
+
     [(EAGLView *)self.view setContext:context];
     [(EAGLView *)self.view setFramebuffer];
     
@@ -116,16 +116,15 @@ static NSThread* lastThread = nil;
 
 - (void)dealloc
 {
-    // Tear down context.
-    if ([EAGLContext currentContext] == context)
-        [EAGLContext setCurrentContext:nil];
-    
+    if ([MGLContext currentContext] == context)
+        [MGLContext setCurrentContext:nil];
+
     delete _app;
     delete _platform;
     delete[] _touchMap;
-    
+
     [context release];
-    
+
     [super dealloc];
 }
 
@@ -157,17 +156,6 @@ static NSThread* lastThread = nil;
 	[super viewDidLoad];
 }
 
-- (void)viewDidUnload
-{
-	[super viewDidUnload];
-    [_keyboardView release];
-    _keyboardView = nil;
-    // Tear down context.
-    if ([EAGLContext currentContext] == context)
-        [EAGLContext setCurrentContext:nil];
-	self.context = nil;	
-}
-
 - (NSInteger)animationFrameInterval
 {
     return animationFrameInterval;
@@ -189,7 +177,7 @@ static NSThread* lastThread = nil;
 {
     if (!animating) {
         CADisplayLink *aDisplayLink = [[UIScreen mainScreen] displayLinkWithTarget:self selector:@selector(drawFrame)];
-        [aDisplayLink setFrameInterval:animationFrameInterval];
+        aDisplayLink.preferredFramesPerSecond = 60;
         [aDisplayLink addToRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
         self.displayLink = aDisplayLink;
 
@@ -245,17 +233,17 @@ static NSThread* lastThread = nil;
 
     _app->update();
 
-    const GLenum discards[]  = {GL_DEPTH_ATTACHMENT};
-//    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
-    glDiscardFramebufferEXT(GL_FRAMEBUFFER, 1, discards);    
-
     [(EAGLView *)self.view presentFramebuffer];
 }
 
-- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
+- (UIInterfaceOrientationMask)supportedInterfaceOrientations
 {
-    // Return YES for supported orientations
-    return UIInterfaceOrientationIsLandscape(interfaceOrientation);
+    return UIInterfaceOrientationMaskLandscape;
+}
+
+- (BOOL)shouldAutorotate
+{
+    return YES;
 }
 
 - (BOOL) initView
@@ -399,7 +387,7 @@ static NSThread* lastThread = nil;
         _dialogResultStrings = [_dialog getUserInput];
     }
     //NSLog(@"Close@vc: %p %d\n", _dialog, _dialogResultStatus);
-    [_dialog dismissModalViewControllerAnimated:YES];
+    [_dialog dismissViewControllerAnimated:YES completion:nil];
 
     [_dialog release];
      _dialog = nil;
@@ -415,7 +403,7 @@ static NSThread* lastThread = nil;
         BOOL isIphone5 = (width == 568);
         NSString* xib = isIpad ? @"CreateNewWorld_ipad" : (isIphone5? @"CreateNewWorld_iphone5" : @"CreateNewWorld_iphone");
         _dialog = [[CreateNewWorldViewController alloc] initWithNibName:xib bundle:[NSBundle mainBundle]];
-        [self presentModalViewController:_dialog animated:YES];
+        [self presentViewController:_dialog animated:YES completion:nil];
         [self initDialog];
         //NSLog(@"--- %p %p\n", _dialog, [self view]);
         //[_dialog addToView:[self view]];
@@ -428,7 +416,7 @@ static NSThread* lastThread = nil;
         UINavigationController *aNavController = [[UINavigationController alloc] initWithRootViewController:self.appSettingsViewController];
         [self.appSettingsViewController setShowCreditsFooter:NO];
         self.appSettingsViewController.showDoneButton = YES;
-        [self presentModalViewController:aNavController animated:YES];
+        [self presentViewController:aNavController animated:YES completion:nil];
 #ifdef APPLE_DEMO_PROMOTION
         [appSettingsViewController setEnabled:NO forKey:[NSString stringWithUTF8String:OptionStrings::Multiplayer_ServerVisible]];
         [appSettingsViewController setEnabled:NO forKey:[NSString stringWithUTF8String:OptionStrings::Multiplayer_Username]];
@@ -447,7 +435,7 @@ static NSThread* lastThread = nil;
         BOOL isIphone5 = (width == 568);
         NSString* xib = isIpad ? @"RenameMPWorld_ipad" : (isIphone5? @"RenameMPWorld_iphone5" : @"RenameMPWorld_iphone");
         _dialog = [[RenameMPWorldViewController alloc] initWithNibName:xib bundle:[NSBundle mainBundle]];
-        [self presentModalViewController:_dialog animated:YES];
+        [self presentViewController:_dialog animated:YES completion:nil];
         [self initDialog];
         //NSLog(@"--- %p %p\n", _dialog, [self view]);
         //[_dialog addToView:[self view]];
@@ -476,7 +464,7 @@ static NSThread* lastThread = nil;
 NSString* DefaultUsername = @"Stevie";
 
 - (void)settingsViewControllerDidEnd:(IASKAppSettingsViewController*)sender {
-    [self dismissModalViewControllerAnimated:YES];
+    [self dismissViewControllerAnimated:YES completion:nil];
 
     NSString* Key = [[NSString alloc] initWithUTF8String:OptionStrings::Multiplayer_Username];
     NSString* username = [[NSUserDefaults standardUserDefaults] objectForKey:Key];

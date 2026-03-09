@@ -36,7 +36,12 @@ NSError* audioSessionError = nil;
     if (audioSessionError)
         NSLog(@"Warning; Couldn't set audio active\n");
 
-    [audioSession setDelegate:self];
+    // Register for interruption notifications (AVAudioSessionDelegate was removed in iOS 8)
+    [[NSNotificationCenter defaultCenter]
+        addObserver:self
+        selector:@selector(handleAudioInterruption:)
+        name:AVAudioSessionInterruptionNotification
+        object:audioSession];
 
     audioSessionSoundCategory = AVAudioSessionCategoryAmbient;
     audioSessionError = nil;
@@ -45,6 +50,14 @@ NSError* audioSessionError = nil;
 
     if (audioSessionError)
         NSLog(@"Warning; Couldn't init audio\n");
+}
+
+- (void)handleAudioInterruption:(NSNotification *)notification {
+    NSUInteger type = [notification.userInfo[AVAudioSessionInterruptionTypeKey] unsignedIntegerValue];
+    if (type == AVAudioSessionInterruptionTypeBegan)
+        [self setAudioEnabled:NO];
+    else
+        [self setAudioEnabled:YES];
 }
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
@@ -168,13 +181,5 @@ NSError* audioSessionError = nil;
     [_viewController setAudioEnabled:status];
 }
 
-- (void)beginInterruption {
-    //NSLog(@"beginInterruption\n");
-    [self setAudioEnabled:NO];
-}
-- (void)endInterruption {
-    //NSLog(@"endInterruption\n");
-    [self setAudioEnabled:YES];
-}
 
 @end

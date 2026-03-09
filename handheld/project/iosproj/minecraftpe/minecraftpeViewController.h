@@ -7,9 +7,8 @@
 //
 
 #import <UIKit/UIKit.h>
+#import <MetalANGLE/MGLKit.h>
 
-#import <OpenGLES/ES1/gl.h>
-#import <OpenGLES/ES1/glext.h>
 #import "../../../src/App.h"
 #import "../../../src/AppPlatform_iOS.h"
 #import "../../../src/NinecraftApp.h"
@@ -17,14 +16,10 @@
 
 #import "../../lib_projects/InAppSettingsKit/Controllers/IASKAppSettingsViewController.h"
 
-@class EAGLContext;
-//@class App;
-//@class AppContext;
-//@class AppPlatform_iOS;
 @class BaseDialogController;
 
 @interface minecraftpeViewController : UIViewController<IASKSettingsDelegate> {
-    EAGLContext *context;
+    MGLContext *context;
     
     // App and AppPlatform
     App* _app;

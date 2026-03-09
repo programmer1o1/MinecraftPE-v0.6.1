@@ -18,8 +18,9 @@
 	#define USE_VBO
 	#define GL_QUADS 0x0007
     #if defined(__APPLE__)
-        #import <OpenGLES/ES1/gl.h>
-        #import <OpenGLES/ES1/glext.h>
+        // iOS 17+: OpenGL ES removed from SDK — use MetalANGLE (GLES 1.1 on Metal)
+        #import <MetalANGLE/GLES/gl.h>
+        #import <MetalANGLE/GLES/glext.h>
     #else
         #include <GLES/gl.h>
         #if defined(ANDROID)
