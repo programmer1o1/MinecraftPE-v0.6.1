@@ -384,8 +384,13 @@ int glhUnProjectf(	float winx, float winy, float winz,
 	#define glBufferData2	 glBufferData
 	#define glBindTexture2	 glBindTexture
 
+	#if defined(MACOS) || defined(LINUX)
 	#define glEnable2		glEnable_shader
 	#define glDisable2		glDisable_shader
+	#else
+	#define glEnable2		glEnable
+	#define glDisable2		glDisable
+	#endif
 
 	#define glColor4f2		glColor4f
 	#define glBlendFunc2	glBlendFunc
@@ -414,8 +419,13 @@ int glhUnProjectf(	float winx, float winy, float winz,
 	#define glBufferData2(a, b, c, d) do{ glBufferData(a, b, c, d); GLERR(17); } while(0)
 	#define glBindTexture2(m, z) do{ glBindTexture(m, z); GLERR(18); } while(0)
 
+	#if defined(MACOS) || defined(LINUX)
 	#define glEnable2(s) do{ glEnable_shader(s); GLERR(19); } while(0)
 	#define glDisable2(s) do{ glDisable_shader(s); GLERR(20); } while(0)
+	#else
+	#define glEnable2(s) do{ glEnable(s); GLERR(19); } while(0)
+	#define glDisable2(s) do{ glDisable(s); GLERR(20); } while(0)
+	#endif
 	#define glColor4f2(r, g, b, a) do{ glColor4f(r,g,b,a); GLERR(21); } while(0)
 	#define glBlendFunc2(src, dst) do{ glBlendFunc(src, dst); GLERR(23); } while(0)
 	#define glShadeModel2(s) do{ glShadeModel(s); GLERR(25); } while(0)

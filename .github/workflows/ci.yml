@@ -21,23 +21,19 @@ jobs:
         working-directory: handheld/project/macos
         run: make -j$(sysctl -n hw.logicalcpu)
 
+      - name: Clean before release build
+        working-directory: handheld/project/macos
+        run: make clean
+
       - name: Build (release)
         working-directory: handheld/project/macos
         run: make BUILD=release -j$(sysctl -n hw.logicalcpu)
 
       - name: Stage artifacts
         run: |
-          mkdir -p artifact/debug artifact/release
-          cp handheld/project/macos/minecraftpe artifact/debug/
-          cp -R handheld/data artifact/debug/
+          mkdir -p artifact/release
           cp handheld/project/macos/minecraftpe artifact/release/
           cp -R handheld/data artifact/release/
-
-      - name: Upload debug binary
-        uses: actions/upload-artifact@v4
-        with:
-          name: minecraftpe-macos-debug
-          path: artifact/debug/
 
       - name: Upload release binary
         uses: actions/upload-artifact@v4
@@ -61,23 +57,19 @@ jobs:
         working-directory: handheld/project/linux
         run: make -j$(nproc)
 
+      - name: Clean before release build
+        working-directory: handheld/project/linux
+        run: make clean
+
       - name: Build (release)
         working-directory: handheld/project/linux
         run: make BUILD=release -j$(nproc)
 
       - name: Stage artifacts
         run: |
-          mkdir -p artifact/debug artifact/release
-          cp handheld/project/linux/minecraftpe artifact/debug/
-          cp -r handheld/data artifact/debug/
+          mkdir -p artifact/release
           cp handheld/project/linux/minecraftpe artifact/release/
           cp -r handheld/data artifact/release/
-
-      - name: Upload debug binary
-        uses: actions/upload-artifact@v4
-        with:
-          name: minecraftpe-linux-debug
-          path: artifact/debug/
 
       - name: Upload release binary
         uses: actions/upload-artifact@v4
