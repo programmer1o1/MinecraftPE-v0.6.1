@@ -227,6 +227,7 @@ void GameRenderer::render(float a) {
 		if (mc->screen && !mc->screen->isInGameScreen())
 			sleepMs(15);
     }
+
 }
 
 /*public*/
@@ -264,6 +265,7 @@ void GameRenderer::renderLevel(float a) {
 		setupClearColor(a);
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
         glEnable2(GL_CULL_FACE);
 
 		TIMER_POP_PUSH("camera");
@@ -307,10 +309,12 @@ void GameRenderer::renderLevel(float a) {
         setupFog(0);
         glEnable2(GL_FOG);
 
+		glEnable2(GL_TEXTURE_2D);
 		mc->textures->loadAndBindTexture("terrain.png");
         glDisable2(GL_ALPHA_TEST);
         glDisable2(GL_BLEND);
         glEnable2(GL_CULL_FACE);
+
 		TIMER_POP_PUSH("terrain-0");
         levelRenderer->render(cameraEntity, 0, a);
 
@@ -871,13 +875,24 @@ void GameRenderer::setupGuiScreen( bool clearColorBuffer )
 	GLbitfield clearBits = clearColorBuffer?
 			GL_DEPTH_BUFFER_BIT|GL_COLOR_BUFFER_BIT
 		:	GL_DEPTH_BUFFER_BIT;
+
 	glClear(clearBits);
+
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity2();
+#if defined(__APPLE__) && !defined(MACOS)
+	// iOS: Use a smaller near/far ortho range that covers all blitOffset
+	// z-values used by GUI elements (0 and -90).
+	glOrthof(0, (GLfloat)screenWidth, (GLfloat)screenHeight, 0, -500.0f, 500.0f);
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity2();
+	// No translate needed — vertices at z=0 and blitOffset are within range
+#else
 	glOrthof(0, (GLfloat)screenWidth, (GLfloat)screenHeight, 0, 2000, 3000);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity2();
 	glTranslatef2(0, 0, -2000);
+#endif
 }
 
 /*private*/

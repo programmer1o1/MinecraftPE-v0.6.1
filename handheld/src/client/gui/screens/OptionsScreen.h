@@ -33,6 +33,16 @@ private:
 	std::vector<OptionsPane*> optionPanes;
 	OptionsPane* currentOptionPane;
 	int selectedCategory;
+
+	// Sidebar scroll state
+	float _catScrollY;
+	float _catScrollVelocity;
+	int _catContentHeight;
+	int _catVisibleHeight;
+	bool _catDragging;
+	int _catDragStartY;
+	float _catDragStartScroll;
+	int _catLastDragY;
 };
 
 #endif /*NET_MINECRAFT_CLIENT_GUI_SCREENS__OptionsScreen_H__*/

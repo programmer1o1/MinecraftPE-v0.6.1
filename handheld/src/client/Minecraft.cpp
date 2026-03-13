@@ -468,8 +468,16 @@ void Minecraft::update() {
 
 	TIMER_PUSH("tick");
 	int toTick = timer.ticks;
-	for (int i = 0; i < toTick; ++i, ++ticks)
+	Stopwatch _tickBudget;
+	_tickBudget.start();
+	for (int i = 0; i < toTick; ++i, ++ticks) {
 		tick(i, toTick-1);
+		// Break out if ticks are taking too long — better to run the game
+		// slightly slow than to freeze at 1fps in a feedback loop where
+		// slow frames cause more ticks which cause slower frames.
+		if (_tickBudget.stopContinue() > 0.05f) // 50ms budget for all ticks
+			break;
+	}
 
 	TIMER_POP_PUSH("updatelights");
 	if (level && !isGeneratingLevel) {
@@ -548,6 +556,9 @@ void Minecraft::tick(int nTick, int maxTick) {
 			generateLevelThread = NULL;
 		}
 		_levelGenerated();
+		// Skip the rest of this tick — let the next frame start fresh
+		// so we don't process a backlog of ticks from generation time.
+		return;
 	}
 
 	//
@@ -1189,6 +1200,10 @@ void Minecraft::init()
 	if (!externalStoragePath.empty()) {
 		options.setSettingsPath(externalStoragePath + "/games/com.mojang/options.txt");
 	}
+#elif defined(__APPLE__) && !defined(MACOS)
+	if (!externalStoragePath.empty()) {
+		options.setSettingsPath(externalStoragePath + "/games/com.mojang/options.txt");
+	}
 #elif defined(MACOS) || defined(LINUX)
 	if (!externalStoragePath.empty()) {
 		options.setSettingsPath(externalStoragePath + "options.txt");
@@ -1432,6 +1447,10 @@ void Minecraft::_levelGenerated()
 	// instead, since adding yourself always generates a entityAdded)
 	//EntityRenderDispatcher::getInstance()->onGraphicsReset();
 	_hasSignaledGeneratingLevelFinished = true;
+
+	// Reset the timer so the game loop doesn't try to catch up with ticks
+	// that accumulated during level generation (which can take 6+ seconds).
+	timer.skipTime();
 }
 
 Player* Minecraft::respawnPlayer(int playerId) {

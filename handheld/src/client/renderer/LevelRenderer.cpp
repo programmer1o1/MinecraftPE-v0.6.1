@@ -71,7 +71,7 @@ LevelRenderer::LevelRenderer( Minecraft* mc)
 #if defined(MACOS) || defined(LINUX) || defined(WIN32)
 	static const int MAX_RENDER_DIST = 1024;
 #else
-	static const int MAX_RENDER_DIST = 400;
+	static const int MAX_RENDER_DIST = 256;
 #endif
 	{
 		int maxW = MAX_RENDER_DIST / CHUNK_SIZE + 1;
@@ -161,6 +161,19 @@ void LevelRenderer::allChanged()
 {
 	deleteChunks();
 
+#ifdef USE_VBO
+	// Flush GPU pipeline so no in-flight draws reference old VBO data,
+	// then orphan every buffer so MetalANGLE releases stale Metal backing.
+	// This prevents GPU page faults when render distance changes cause a
+	// different number of chunks to reuse the same VBO pool.
+	glFinish();
+	for (int i = 0; i < numListsOrBuffers; ++i) {
+		glBindBuffer2(GL_ARRAY_BUFFER, chunkBuffers[i]);
+		glBufferData2(GL_ARRAY_BUFFER, 0, NULL, GL_STATIC_DRAW);
+	}
+	glBindBuffer2(GL_ARRAY_BUFFER, 0);
+#endif
+
 	Tile::leaves->setFancy(mc->options.fancyGraphics);
 	Tile::leaves_carried->setFancy(mc->options.fancyGraphics);
 	lastViewDistance = mc->options.viewDistance & 7; // clamp to [0,7] — 0=far, 7=tiny
@@ -179,7 +192,7 @@ void LevelRenderer::allChanged()
 #if defined(MACOS) || defined(LINUX) || defined(WIN32)
 	if (dist > 1024) dist = 1024;
 #else
-	if (dist > 400) dist = 400;
+	if (dist > 256) dist = 256;
 #endif
 	/*
 	* if (Minecraft.FLYBY_MODE) { dist = 512 - CHUNK_SIZE * 2; }
@@ -644,6 +657,7 @@ bool LevelRenderer::updateDirtyChunks( Mob* player, bool force )
 		return dirtyChunks.size() == 0;
 	} else {
 		static const float MaxFrameTime = 1.0f / 60.0f;
+		static const int   MaxChunksPerFrame = 32;
 
 		// Sort closest-first (DirtyChunkSorter is farthest-first, so closest ends up at back)
 		DirtyChunkSorter dirtyChunkSorter(player);
@@ -652,6 +666,7 @@ bool LevelRenderer::updateDirtyChunks( Mob* player, bool force )
 		Stopwatch chunkWatch;
 		chunkWatch.start();
 
+		int rebuilt = 0;
 		while (!dirtyChunks.empty()) {
 			Chunk* chunk = dirtyChunks.back();
 			if (force && !chunk->visible) {
@@ -660,10 +675,11 @@ bool LevelRenderer::updateDirtyChunks( Mob* player, bool force )
 				continue;
 			}
 			float ttt = chunkWatch.stopContinue();
-			if (ttt >= MaxFrameTime) break;
+			if (ttt >= MaxFrameTime || rebuilt >= MaxChunksPerFrame) break;
 			chunk->rebuild();
 			chunk->setClean();
 			dirtyChunks.pop_back();
+			rebuilt++;
 		}
 
 		return dirtyChunks.empty();

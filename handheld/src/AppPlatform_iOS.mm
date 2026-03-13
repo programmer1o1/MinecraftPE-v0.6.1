@@ -120,6 +120,15 @@ TextureData AppPlatform_iOS::loadTexture(const std::string& filename_, bool text
         CGContextTranslateCTM( imgcontext, 0, 0);//height - height );
         CGContextDrawImage( imgcontext, CGRectMake( 0, 0, out.w, out.h ), image.CGImage );
         CGContextRelease(imgcontext);
+
+        // Diagnostic: log first pixel (tile 0,0 = grass top) for terrain.png
+        if (filename.find("terrain") != std::string::npos || filename.find("background") != std::string::npos) {
+            unsigned char *px = out.data;
+            LOGI("TEXLOAD '%s' %dx%d  px[0]=(%d,%d,%d,%d) px[16]=(%d,%d,%d,%d)\n",
+                 filename.c_str(), out.w, out.h,
+                 px[0], px[1], px[2], px[3],
+                 px[16*4], px[16*4+1], px[16*4+2], px[16*4+3]);
+        }
     } else {
         LOGI("Couldn't find file: %s\n", filename.c_str());
 
@@ -279,7 +288,7 @@ void AppPlatform_iOS::hideKeyboard() {
     [_viewController hideKeyboard];
 	super::hideKeyboard();
 }
-void AppPlatform_iOS::isPowerVR() {
+bool AppPlatform_iOS::isPowerVR() {
 	const char* s = (const char*)glGetString(GL_RENDERER);
 	if (!s) return false;
 	return strstr(s, "SGX") != NULL;

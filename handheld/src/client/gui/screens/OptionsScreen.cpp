@@ -9,11 +9,23 @@
 #include "../components/OptionsPane.h"
 #include "../components/ImageButton.h"
 #include "../components/OptionsGroup.h"
+#include "../Gui.h"
+#include "../../renderer/gles.h"
+#include "../../../platform/input/Mouse.h"
+#include "../../../util/Mth.h"
 OptionsScreen::OptionsScreen()
 : btnClose(NULL),
   bHeader(NULL),
   currentOptionPane(NULL),
-  selectedCategory(0) {
+  selectedCategory(0),
+  _catScrollY(0),
+  _catScrollVelocity(0),
+  _catContentHeight(0),
+  _catVisibleHeight(0),
+  _catDragging(false),
+  _catDragStartY(0),
+  _catDragStartScroll(0),
+  _catLastDragY(0) {
 }
 
 OptionsScreen::~OptionsScreen() {
@@ -87,6 +99,7 @@ void OptionsScreen::setupPositions() {
 		(*it)->selected = false;
 		curY += (*it)->height + 1;
 	}
+	_catContentHeight = curY - (headerH + 2);
 
 	for(std::vector<OptionsPane*>::iterator it = optionPanes.begin(); it != optionPanes.end(); ++it) {
 		(*it)->x = catW + 2;
@@ -100,14 +113,57 @@ void OptionsScreen::setupPositions() {
 void OptionsScreen::render( int xm, int ym, float a ) {
 	renderBackground();
 
-	// Sidebar background
 	int catW = (categoryButtons.size() > 0) ? categoryButtons[0]->width : 80;
 	int headerH = (bHeader != NULL) ? bHeader->height : 26;
+
+	// Sidebar background & border
 	fill(0, headerH, catW, height, 0x66000000);
-	// Sidebar right border
 	fill(catW, headerH, catW + 1, height, 0x88888888);
 
-	super::render(xm, ym, a);
+	// Render header and close button (unscissored)
+	if (bHeader != NULL) ((Button*)bHeader)->render(minecraft, xm, ym);
+	if (btnClose != NULL) ((Button*)btnClose)->render(minecraft, xm, ym);
+
+	// --- Scrollable sidebar category buttons ---
+	int sidebarTop = headerH + 2;
+	_catVisibleHeight = height - sidebarTop;
+	if (_catVisibleHeight < 1) _catVisibleHeight = 1;
+	int maxScroll = _catContentHeight - _catVisibleHeight;
+	if (maxScroll < 0) maxScroll = 0;
+	if (_catScrollY < 0) _catScrollY = 0;
+	if (_catScrollY > maxScroll) _catScrollY = (float)maxScroll;
+
+	float scale = Gui::GuiScale;
+	int physH = minecraft->height;
+	GLint sx = 0;
+	GLint sy = physH - (GLint)(scale * (sidebarTop + _catVisibleHeight));
+	GLsizei sw = (GLsizei)(scale * catW);
+	GLsizei sh = (GLsizei)(scale * _catVisibleHeight);
+	glEnable2(GL_SCISSOR_TEST);
+	glScissor(sx, sy, sw, sh);
+
+	glPushMatrix2();
+	glTranslatef2(0, -(int)_catScrollY, 0);
+
+	// Render only category buttons inside scissor
+	for (size_t i = 0; i < categoryButtons.size(); ++i) {
+		categoryButtons[i]->render(minecraft, xm, ym);
+	}
+
+	glPopMatrix2();
+
+	// Sidebar scrollbar
+	if (maxScroll > 0) {
+		float barH = (float)_catVisibleHeight * _catVisibleHeight / _catContentHeight;
+		if (barH < 8) barH = 8;
+		float barY = sidebarTop + (_catScrollY / maxScroll) * (_catVisibleHeight - barH);
+		int barX = catW - 3;
+		fill(barX, (int)barY, barX + 2, (int)(barY + barH), 0x88ffffff);
+	}
+
+	glDisable2(GL_SCISSOR_TEST);
+
+	// Content pane (outside scissor)
 	int xmm = xm * width / minecraft->width;
 	int ymm = ym * height / minecraft->height - 1;
 	if(currentOptionPane != NULL)
@@ -204,18 +260,58 @@ void OptionsScreen::generateOptionScreens() {
 }
 
 void OptionsScreen::mouseClicked( int x, int y, int buttonNum ) {
-	if(currentOptionPane != NULL)
-		currentOptionPane->mouseClicked(minecraft, x, y, buttonNum);
-	super::mouseClicked(x, y, buttonNum);
+	int catW = (categoryButtons.size() > 0) ? categoryButtons[0]->width : 80;
+	int headerH = (bHeader != NULL) ? bHeader->height : 26;
+	int sidebarTop = headerH + 2;
+
+	if (x >= 0 && x < catW && y >= sidebarTop) {
+		// Click in sidebar — start drag
+		_catDragging = true;
+		_catDragStartY = y;
+		_catDragStartScroll = _catScrollY;
+		_catLastDragY = y;
+		_catScrollVelocity = 0;
+		// Pass click with scroll offset to buttons
+		super::mouseClicked(x, y + (int)_catScrollY, buttonNum);
+	} else {
+		if(currentOptionPane != NULL)
+			currentOptionPane->mouseClicked(minecraft, x, y, buttonNum);
+		super::mouseClicked(x, y, buttonNum);
+	}
 }
 
 void OptionsScreen::mouseReleased( int x, int y, int buttonNum ) {
-	if(currentOptionPane != NULL)
-		currentOptionPane->mouseReleased(minecraft, x, y, buttonNum);
-	super::mouseReleased(x, y, buttonNum);
+	int catW = (categoryButtons.size() > 0) ? categoryButtons[0]->width : 80;
+	int headerH = (bHeader != NULL) ? bHeader->height : 26;
+	int sidebarTop = headerH + 2;
+
+	_catDragging = false;
+
+	if (x >= 0 && x < catW && y >= sidebarTop) {
+		// Release in sidebar — offset y for button hit test
+		super::mouseReleased(x, y + (int)_catScrollY, buttonNum);
+	} else {
+		if(currentOptionPane != NULL)
+			currentOptionPane->mouseReleased(minecraft, x, y, buttonNum);
+		super::mouseReleased(x, y, buttonNum);
+	}
 }
 
 void OptionsScreen::tick() {
+	// Sidebar scroll handling
+	if (_catDragging) {
+		int mx = Mouse::getX();
+		int my = Mouse::getY();
+		toGUICoordinate(mx, my);
+		float delta = (float)(_catDragStartY - my);
+		_catScrollVelocity = (float)(_catLastDragY - my);
+		_catLastDragY = my;
+		_catScrollY = _catDragStartScroll + delta;
+	} else if (_catScrollVelocity > 0.5f || _catScrollVelocity < -0.5f) {
+		_catScrollY += _catScrollVelocity;
+		_catScrollVelocity *= 0.85f;
+	}
+
 	if(currentOptionPane != NULL)
 		currentOptionPane->tick(minecraft);
 	super::tick();

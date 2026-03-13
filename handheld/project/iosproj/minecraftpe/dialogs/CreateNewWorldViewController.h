@@ -10,27 +10,35 @@
 
 @interface CreateNewWorldViewController : BaseDialogController<UITextFieldDelegate>
 {
-    IBOutlet UILabel* _labelName;
-    IBOutlet UILabel* _labelSeed;
-    IBOutlet UILabel* _labelSeedHint;
-    
-    IBOutlet UILabel* _labelGameMode;
-    IBOutlet UILabel* _labelGameModeDesc;
+    UILabel* _labelName;
+    UILabel* _labelSeed;
+    UILabel* _labelSeedHint;
 
-    IBOutlet UITextField* _textName;
-    IBOutlet UITextField* _textSeed;
-    
-    IBOutlet UIButton* _btnGameMode;
-    
+    UILabel* _labelGameMode;
+    UILabel* _labelGameModeDesc;
+
+    UITextField* _textName;
+    UITextField* _textSeed;
+
+    UIButton* _btnGameMode;
+
     int _currentGameModeId;
+    int _currentWorldType;
+
+    UILabel*  _labelWorldType;
+    UIButton* _btnWorldType;
+
+    UIView*   _contentContainer;
 }
 
 - (void) UpdateGameModeDesc;
+- (void) UpdateWorldTypeDesc;
 
 - (IBAction)DismissKeyboard;
 
 - (IBAction)Create;
 - (IBAction)Cancel;
-- (IBAction)ToggleGameMode; 
+- (IBAction)ToggleGameMode;
+- (IBAction)ToggleWorldType;
 
 @end

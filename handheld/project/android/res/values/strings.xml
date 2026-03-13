@@ -13,6 +13,8 @@
 	<string name="createworld_seed_info">Leave blank for random seed</string>
 	<string name="gamemode_survival_summary">Mobs, health and gather resources</string>
 	<string name="gamemode_creative_summary">Unlimited resources and flying</string>
+	<string name="worldtype_old_summary">Finite 256x256 world</string>
+	<string name="worldtype_infinite_summary">Endless procedural world</string>
 
 	<!-- RENAME WORLD -->
 	<string name="renameworld_title">Save world as</string>

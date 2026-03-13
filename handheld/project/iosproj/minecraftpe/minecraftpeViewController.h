@@ -7,7 +7,6 @@
 //
 
 #import <UIKit/UIKit.h>
-#import <MetalANGLE/MGLKit.h>
 
 #import "../../../src/App.h"
 #import "../../../src/AppPlatform_iOS.h"
@@ -19,24 +18,22 @@
 @class BaseDialogController;
 
 @interface minecraftpeViewController : UIViewController<IASKSettingsDelegate> {
-    MGLContext *context;
-    
     // App and AppPlatform
     App* _app;
     AppContext* _context;
-    AppPlatform_iOS* _platform;   
-    
+    AppPlatform_iOS* _platform;
+
     UITouch** _touchMap;
-    
+
     BOOL animating;
     NSInteger animationFrameInterval;
     CADisplayLink *displayLink;
-    
+
     BaseDialogController* _dialog;
-    
+
     int _dialogResultStatus;
     std::vector<std::string> _dialogResultStrings;
-    
+
     ShowKeyboardView* _keyboardView;
 
     @public

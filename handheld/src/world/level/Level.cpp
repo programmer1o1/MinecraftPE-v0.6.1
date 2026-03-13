@@ -339,6 +339,11 @@ void Level::tickTiles() {
 bool Level::tickPendingTicks(bool force) {
     int count = _tickNextTickSet.size();
     if (count > MAX_TICK_TILES_PER_TICK) count = MAX_TICK_TILES_PER_TICK;
+
+    static const float PENDING_TICK_BUDGET = 0.005f; // 5ms budget per game tick
+    Stopwatch _ptBudget;
+    _ptBudget.start();
+
     for (int i = 0; i < count; i++) {
 		TickDataSet::iterator td = _tickNextTickSet.begin();
         if (!force && td->delay > levelData.getTime()) {
@@ -353,6 +358,9 @@ bool Level::tickPendingTicks(bool force) {
             }
         }
         _tickNextTickSet.erase(td);
+
+        if (_ptBudget.stopContinue() > PENDING_TICK_BUDGET)
+            break;
     }
     return _tickNextTickSet.size() != 0;
 }

@@ -66,10 +66,16 @@ void PerfRenderer::renderFpsMeter( float tickTime )
 	glMatrixMode(GL_PROJECTION);
 	glEnable2(GL_COLOR_MATERIAL);
 	glLoadIdentity2();
+#if defined(__APPLE__) && !defined(MACOS)
+	glOrthof(0, (GLfloat)_mc->width, (GLfloat)_mc->height, 0, -500.0f, 500.0f);
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity2();
+#else
 	glOrthof(0, (GLfloat)_mc->width, (GLfloat)_mc->height, 0, 1000, 3000);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity2();
 	glTranslatef2(0, 0, -2000);
+#endif
 
 	glLineWidth(1);
 	glDisable2(GL_TEXTURE_2D);

@@ -11,7 +11,7 @@ A leaked source code of **Minecraft Pocket Edition v0.6.1**. Ported to macOS and
 | Platform | Status | Build system | Notes |
 |---|---|---|---|
 | Android | Original + Modernized | NDK (`handheld/project/android/`) | armeabi-v7a / arm64-v8a, immersive fullscreen, modern multitouch |
-| iOS | Original | Xcode (`handheld/project/iosproj/`) | Requires code signing |
+| iOS | Modernized | Xcode (`handheld/project/iosproj/`) | MetalANGLE GLES2, iOS 17+ (code signing required) |
 | Win32 | Original | Visual Studio (`handheld/project/win32/`) | MSVC, OpenGL ES emulator (libs bundled) |
 | Raspberry Pi | Original | Makefile (`handheld/project/raspberry/`) | GLES 1.x, SDL 1.2 |
 | macOS (arm64) | Community port | Makefile (`handheld/project/macos/`) | SDL2 + OpenGL 2.1 + OpenAL |
@@ -153,6 +153,19 @@ Standard Minecraft PE touchscreen controls: virtual d-pad for movement, swipe to
 
 ---
 
+## iOS modernizations
+
+The iOS port has been migrated from OpenGL ES 1.x (fixed-function) to OpenGL ES 2.0 (programmable shaders) via MetalANGLE:
+
+- **MetalANGLE GLES2 backend** — replaces the deprecated OpenGL ES framework (removed in iOS 17) with MetalANGLE's Metal-backed GLES2 context (`MGLContext`, `MGLKView`).
+- **Custom GLSL ES 1.00 shader** — single vertex/fragment shader pair handles texturing, per-vertex color, alpha testing, and fog (linear/exp/exp2) via uniforms.
+- **Software matrix stack** (`MatrixStack.h`) — CPU-side replacement for all GLES1 matrix operations (`glPushMatrix`, `glTranslatef`, `glRotatef`, `glScalef`, `glOrthof`, etc.) with lazy MVP computation.
+- **Macro redirect layer** — all GLES1 fixed-function calls in the shared codebase are transparently redirected to shader uniforms, matrix stack methods, or no-ops via preprocessor macros in `gles.h`. No changes needed to game logic code.
+- **Alpha compositing fix** — dedicated mini-shader writes alpha=1.0 to the framebuffer after each frame without touching RGB, preventing transparent pixels from showing the UIKit background.
+- **Create world dialog** — programmatic UIKit layout with world name, seed, game mode toggle, and world type toggle (Old 256x256 / Infinite). Scales to any screen size.
+
+---
+
 ## Android modernizations
 
 The Android port has been updated for modern devices (Android 10–14+):
@@ -167,6 +180,7 @@ The Android port has been updated for modern devices (Android 10–14+):
 - **Thread safety** — detached threads (`PTHREAD_CREATE_DETACHED`) are no longer joined in `CThread` destructor, fixing SIGABRT on world generation.
 - **Dialog crash fix** — removed `showSoftInput(getCurrentFocus())` in `onDialogCompleted` that caused NPE when focus was null after dialog dismiss.
 - **Touchscreen detection** — `supportsTouchscreen()` returns true for all non-Xperia Play devices.
+- **World type in create world dialog** — added `WorldTypeButton` toggle (Old 256x256 / Infinite) to the native create world layout, matching iOS.
 
 ---
 
@@ -218,6 +232,11 @@ All fixes are in shared source and apply to every platform unless noted.
 | Entity frustum culling pop-out at screen edges | Entity bounding boxes expanded by 0.5 before frustum test in `LevelRenderer` |
 | Renderer singleton memory leaks on exit | Cleanup code enabled for all non-Android / non-server platforms in `NinecraftApp` |
 | Heap buffer overflow on infinite world creation | Stale object files from header change; Makefile now uses `-MMD -MP` dependency tracking |
+| Textures missing on desktop (macOS/Linux) | `glEnable2`/`glDisable2` now route through shader wrapper to update `useTexture` uniform |
+| Blocks invisible on desktop with VBO rendering | `RenderList::renderChunks()` now enables `GL_VERTEX_ARRAY` client state before drawing |
+| GUI feedback ring not rendering on GLES2 | Replaced VBO `drawArrayVT` calls with immediate Tesselator geometry (no `GL_TRIANGLE_FAN`) |
+| Scrollable options sidebar overflows on small screens | Options sidebar and content pane now scissor-clipped with drag scrolling and inertia |
+| Pending tick stalls on large infinite worlds | `tickPendingTicks` now budgets 5ms per game tick to prevent frame drops |
 
 ---
 

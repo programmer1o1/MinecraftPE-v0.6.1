@@ -121,6 +121,7 @@ TextureId Textures::assignTexture( const std::string& resourceName, const Textur
         }
 
         default:
+        {
             const GLint mode = img.transparent? GL_RGBA : GL_RGB;
 
             if (img.format == TEXF_UNCOMPRESSED_565) {
@@ -135,7 +136,9 @@ TextureId Textures::assignTexture( const std::string& resourceName, const Textur
             else {
                 glTexImage2D2(GL_TEXTURE_2D, 0, mode, img.w, img.h, 0, mode, GL_UNSIGNED_BYTE, img.data);
             }
+
             break;
+        }
     }
 
     //LOGI("Adding id: %d to map\n", id);
@@ -153,6 +156,7 @@ const TextureData* Textures::getTemporaryTextureData( TextureId id )
 
 	return &it->second;
 }
+
 
 void Textures::tick(bool uploadToGraphicsCard)
 {

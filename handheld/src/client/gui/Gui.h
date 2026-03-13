@@ -112,6 +112,8 @@ private:
 
 	RenderChunk rcFeedbackOuter;
 	RenderChunk rcFeedbackInner;
+	float _feedbackRadius;
+	float _feedbackRadiusInner;
 
 	// For dropping
 	static const float DropTicks;

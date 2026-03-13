@@ -42,7 +42,9 @@ Gui::Gui(Minecraft* minecraft)
 	_currentDropTicks(-1),
 	_currentDropSlot(-1),
 	MAX_MESSAGE_WIDTH(240),
-	itemNameOverlayTime(2)
+	itemNameOverlayTime(2),
+	_feedbackRadius(0),
+	_feedbackRadiusInner(0)
 {
 	glGenBuffers2(1, &_inventoryRc.vboId);
 	glGenBuffers2(1, &rcFeedbackInner.vboId);
@@ -351,6 +353,8 @@ void Gui::onConfigChanged( const Config& c ) {
 	const float radius = Mth::Min(80.0f/2, maxRadius);
 	//LOGI("radius, maxradius: %f, %f\n", radius, maxRadius);
 	const float radiusInner = radius * 0.95f;
+	_feedbackRadius = radius;
+	_feedbackRadiusInner = radiusInner;
 
 	const int steps = 24;
 	const float fstep = Mth::TWO_PI / steps;
@@ -511,7 +515,13 @@ void Gui::renderProgressIndicator( const bool isTouchInterface, const int screen
 	} else if(!bowEquipped) {
 		const float tprogress = minecraft->gameMode->destroyProgress;
 		const float alpha = Mth::clamp(minecraft->inputHolder->alpha, 0.0f, 1.0f);
-		//LOGI("alpha: %f\n", alpha);
+
+		const float radius = _feedbackRadius;
+		const float radiusInner = _feedbackRadiusInner;
+		if (radius <= 0) return; // not yet configured
+
+		const int steps = 24;
+		const float fstep = Mth::TWO_PI / steps;
 
 		if (tprogress <= 0 && minecraft->inputHolder->alpha >= 0) {
 			glDisable2(GL_TEXTURE_2D);
@@ -522,11 +532,24 @@ void Gui::renderProgressIndicator( const bool isTouchInterface, const int screen
 			else
 				glColor4f2(1, 1, 1, Mth::Min(0.4f, alpha*0.4f));
 
-			//LOGI("alpha2: %f\n", alpha);
 			const float x = InvGuiScale * minecraft->inputHolder->mousex;
 			const float y = InvGuiScale * minecraft->inputHolder->mousey;
 			glTranslatef2(x, y, 0);
-			drawArrayVT(rcFeedbackOuter.vboId, rcFeedbackOuter.vertexCount, 24);
+			{
+				Tesselator& t = Tesselator::instance;
+				t.begin();
+				for (int i = 0; i < steps; ++i) {
+					float a0 = i * fstep;
+					float a1 = a0 + fstep;
+					float c0 = Mth::cos(a0), s0 = Mth::sin(a0);
+					float c1 = Mth::cos(a1), s1 = Mth::sin(a1);
+					t.vertexUV(radiusInner*c0, radiusInner*s0, 0, 0, 1);
+					t.vertexUV(radiusInner*c1, radiusInner*s1, 0, 1, 1);
+					t.vertexUV(radius*c1, radius*s1, 0, 1, 0);
+					t.vertexUV(radius*c0, radius*s0, 0, 0, 0);
+				}
+				t.draw();
+			}
 			glTranslatef2(-x, -y, 0);
 
 			glEnable2(GL_TEXTURE_2D);
@@ -534,9 +557,6 @@ void Gui::renderProgressIndicator( const bool isTouchInterface, const int screen
 		} else if (tprogress > 0) {
 			const float oProgress = minecraft->gameMode->oDestroyProgress;
 			const float progress = 0.5f * (oProgress + (tprogress - oProgress) * a);
-
-			//static Stopwatch w;
-			//w.start();
 
 			glDisable2(GL_TEXTURE_2D);
 			glColor4f2(1, 1, 1, 0.8f * alpha);
@@ -547,19 +567,46 @@ void Gui::renderProgressIndicator( const bool isTouchInterface, const int screen
 			const float y = InvGuiScale * minecraft->inputHolder->mousey;
 			glPushMatrix2();
 			glTranslatef2(x, y, 0);
-			drawArrayVT(rcFeedbackOuter.vboId, rcFeedbackOuter.vertexCount, 24);
+			{
+				Tesselator& t = Tesselator::instance;
+				// Outer ring
+				t.begin();
+				for (int i = 0; i < steps; ++i) {
+					float a0 = i * fstep;
+					float a1 = a0 + fstep;
+					float c0 = Mth::cos(a0), s0 = Mth::sin(a0);
+					float c1 = Mth::cos(a1), s1 = Mth::sin(a1);
+					t.vertexUV(radiusInner*c0, radiusInner*s0, 0, 0, 1);
+					t.vertexUV(radiusInner*c1, radiusInner*s1, 0, 1, 1);
+					t.vertexUV(radius*c1, radius*s1, 0, 1, 0);
+					t.vertexUV(radius*c0, radius*s0, 0, 0, 0);
+				}
+				t.draw();
+			}
 			glScalef2(0.5f + progress, 0.5f + progress, 1);
-			//glDisable2(GL_CULL_FACE);
 			glColor4f2(1, 1, 1, 1);
 			glBlendFunc2(GL_ONE_MINUS_DST_COLOR, GL_ONE_MINUS_SRC_COLOR);
-			drawArrayVT(rcFeedbackInner.vboId, rcFeedbackInner.vertexCount, 24, GL_TRIANGLE_FAN);
+			{
+				Tesselator& t = Tesselator::instance;
+				// Inner disc as explicit triangles (no GL_TRIANGLE_FAN)
+				t.begin();
+				for (int i = 0; i < steps; ++i) {
+					float a0 = -i * fstep;
+					float a1 = -(i + 1) * fstep;
+					float c0 = Mth::cos(a0), s0 = Mth::sin(a0);
+					float c1 = Mth::cos(a1), s1 = Mth::sin(a1);
+					// Two triangles forming a "pizza slice" from center
+					t.vertexUV(0, 0, 0, 0, 0);
+					t.vertexUV(radiusInner*c0, radiusInner*s0, 0, 0, 0);
+					t.vertexUV(radiusInner*c1, radiusInner*s1, 0, 0, 0);
+					t.vertexUV(0, 0, 0, 0, 0);  // degenerate quad, 4th vertex = center
+				}
+				t.draw();
+			}
 			glPopMatrix2();
 
 			glDisable(GL_BLEND);
 			glEnable2(GL_TEXTURE_2D);
-
-			//w.stop();
-			//w.printEvery(100, "feedback-r ");
 		}
 	}
 }

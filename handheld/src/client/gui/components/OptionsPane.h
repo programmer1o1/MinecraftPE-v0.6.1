@@ -6,7 +6,7 @@
 #include "GuiElementContainer.h"
 #include "../../../world/item/ItemInstance.h"
 #include "../../../client/Options.h"
-class Font; 
+class Font;
 class Textures;
 class NinePatchLayer;
 class ItemPane;
@@ -25,6 +25,21 @@ public:
 	void createProgressSlider(Minecraft* minecraft, unsigned int group, std::string label, const Options::Option* option, float progressMin=1.0f, float progressMax=1.0f );
 	void createStepSlider(Minecraft* minecraft, unsigned int group, std::string label, const Options::Option* option, const std::vector<int>& stepVec );
 	void setupPositions();
+
+	virtual void render(Minecraft* minecraft, int xm, int ym);
+	virtual void mouseClicked(Minecraft* minecraft, int x, int y, int buttonNum);
+	virtual void mouseReleased(Minecraft* minecraft, int x, int y, int buttonNum);
+	virtual void tick(Minecraft* minecraft);
+
+private:
+	float _scrollY;
+	float _scrollVelocity;
+	int _contentHeight;
+	int _visibleHeight;
+	bool _dragging;
+	int _dragStartY;
+	float _dragStartScroll;
+	int _lastDragY;
 };
 
 #endif /*ITEMPANE_H__*/

@@ -398,7 +398,8 @@ public class MainActivity extends Activity {
     		chooseDialog(R.layout.create_new_world,
     			new int[] { R.id.editText_worldName,
     						R.id.editText_worldSeed,
-    						R.id.button_gameMode},
+    						R.id.button_gameMode,
+    						R.id.button_worldType},
     			false, // Don't prevent back key
     			R.id.button_createworld_create,
     			R.id.button_createworld_cancel

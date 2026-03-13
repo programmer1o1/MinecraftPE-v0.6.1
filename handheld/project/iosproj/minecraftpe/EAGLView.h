@@ -1,32 +1,17 @@
 //
 //  EAGLView.h
-//  OpenGLES_iPhone
+//  minecraftpe
 //
-//  Created by mmalc Crawford on 11/18/10.
-//  Copyright 2010 Apple Inc. All rights reserved.
+//  Rendering view whose backing layer is an MGLLayer (MetalANGLE's
+//  CALayer subclass).  This is the direct equivalent of the original
+//  EAGLView/CAEAGLLayer pattern, ported to the MetalANGLE API.
 //
 
 #import <UIKit/UIKit.h>
 #import <MetalANGLE/MGLKit.h>
 
-// This class wraps MGLLayer (MetalANGLE) into a convenient UIView subclass.
-// The view content is basically a GLES surface rendered via Metal under the hood.
-@interface EAGLView : UIView {
-    // The pixel dimensions of the MGLLayer.
-    GLint framebufferWidth;
-    GLint framebufferHeight;
+@interface EAGLView : UIView
 
-    // The OpenGL ES names for the framebuffer and renderbuffers.
-    GLuint defaultFramebuffer;
-    GLuint colorRenderbuffer, _depthRenderBuffer;
-
-    @public
-    GLfloat viewScale;
-}
-
-@property (nonatomic, retain) MGLContext *context;
-
-- (void)setFramebuffer;
-- (BOOL)presentFramebuffer;
+@property(nonatomic, readonly) MGLLayer *glLayer;
 
 @end

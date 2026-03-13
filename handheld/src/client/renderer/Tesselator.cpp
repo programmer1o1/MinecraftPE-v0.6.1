@@ -91,7 +91,7 @@ RenderChunk Tesselator::end( bool useMine, int bufferId )
 		// Not using VBO - always use the next buffer object
 		bufferId = vboIds[vboId];
 #endif
-		int access = GL_STATIC_DRAW;//(accessMode==ACCESS_DYNAMIC) ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW;
+		int access = GL_STATIC_DRAW;
 		int bytes = p * sizeof(VERTEX);
 		glBindBuffer2(GL_ARRAY_BUFFER, bufferId);
 		glBufferData2(GL_ARRAY_BUFFER, bytes, _varray, access); // GL_STREAM_DRAW
@@ -381,27 +381,45 @@ void Tesselator::draw()
 			vboId = 0;
 
 		int bufferId = vboIds[vboId];
-		
-		int access = GL_DYNAMIC_DRAW;//(accessMode==ACCESS_DYNAMIC) ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW;
+
+		int access = GL_DYNAMIC_DRAW;
 		int bytes = p * sizeof(VERTEX);
 		glBindBuffer2(GL_ARRAY_BUFFER, bufferId);
-		glBufferData2(GL_ARRAY_BUFFER, bytes, _varray, access); // GL_STREAM_DRAW
+		glBufferData2(GL_ARRAY_BUFFER, bytes, _varray, access);
 
+#if defined(__APPLE__) && !defined(MACOS)
+		// iOS GLES2: set up vertex attributes for shader
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, VertexSizeBytes, 0);
+		if (hasTexture) {
+			glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, VertexSizeBytes, (GLvoid*)(3*4));
+		} else {
+			glDisableVertexAttribArray(1);
+		}
+		if (hasColor) {
+			glVertexAttribPointer(2, 4, GL_UNSIGNED_BYTE, GL_TRUE, VertexSizeBytes, (GLvoid*)(5*4));
+			if (g_loc_useVertexColor >= 0) glUniform1i(g_loc_useVertexColor, 1);
+		} else {
+			glDisableVertexAttribArray(2);
+			if (g_loc_useVertexColor >= 0) glUniform1i(g_loc_useVertexColor, 0);
+		}
+		shaderSyncUniforms();
+		if (mode == GL_QUADS) {
+			glDrawArrays(GL_TRIANGLES, 0, vertices);
+		} else {
+			glDrawArrays(mode, 0, vertices);
+		}
+		// Re-enable attribs that were disabled
+		if (!hasTexture) glEnableVertexAttribArray(1);
+		if (!hasColor) glEnableVertexAttribArray(2);
+#else
 		if (hasTexture) {
 			glTexCoordPointer2(2, GL_FLOAT, VertexSizeBytes, (GLvoid*) (3 * 4));
-			//glTexCoordPointer2(2, GL_FLOAT, VertexSizeBytes, (GLvoid*) &_varray->u);
 			glEnableClientState2(GL_TEXTURE_COORD_ARRAY);
 		}
 		if (hasColor) {
 			glColorPointer2(4, GL_UNSIGNED_BYTE, VertexSizeBytes, (GLvoid*) (5 * 4));
-			//glColorPointer2(4, GL_UNSIGNED_BYTE, VertexSizeBytes, (GLvoid*) &_varray->color);
 			glEnableClientState2(GL_COLOR_ARRAY);
 		}
-		//if (hasNormal) {
-		//	glNormalPointer(GL_BYTE, VertexSizeBytes, (GLvoid*) (6 * 4));
-		//	glEnableClientState2(GL_NORMAL_ARRAY);
-		//}
-		//glVertexPointer2(3, GL_FLOAT, VertexSizeBytes, (GLvoid*)&_varray);
 		glVertexPointer2(3, GL_FLOAT, VertexSizeBytes, 0);
 		glEnableClientState2(GL_VERTEX_ARRAY);
 
@@ -410,6 +428,7 @@ void Tesselator::draw()
 		} else {
 			glDrawArrays2(mode, 0, vertices);
 		}
+#endif
 
 		glDisableClientState2(GL_VERTEX_ARRAY);
 		if (hasTexture) glDisableClientState2(GL_TEXTURE_COORD_ARRAY);

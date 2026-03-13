@@ -11,14 +11,16 @@
 
 @class minecraftpeViewController;
 
-@interface minecraftpeAppDelegate : NSObject <UIApplicationDelegate> {
+@interface minecraftpeAppDelegate : UIResponder <UIApplicationDelegate> {
     AVAudioSession* audioSession;
     NSString*       audioSessionSoundCategory;
 }
 
-@property (nonatomic, retain) IBOutlet UIWindow *window;
+@property (nonatomic, retain) UIWindow *window;
 
-@property (nonatomic, retain) IBOutlet minecraftpeViewController *viewController;
+@property (nonatomic, retain) minecraftpeViewController *viewController;
+
+- (void)initAudio;
 
 + (void) initialize;
 

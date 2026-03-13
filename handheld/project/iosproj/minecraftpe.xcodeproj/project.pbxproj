@@ -3,10 +3,12 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 46;
+	objectVersion = 54;
 	objects = {
 
 /* Begin PBXBuildFile section */
+		BB000001000000000000AA01 /* Metal.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BB000001000000000000AA00 /* Metal.framework */; };
+		BB000001000000000000AA02 /* Metal.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BB000001000000000000AA00 /* Metal.framework */; };
 		04004533169EE72E003EB6FA /* clouds.png in Resources */ = {isa = PBXBuildFile; fileRef = 04004532169EE72E003EB6FA /* clouds.png */; };
 		0400453716A41236003EB6FA /* HeavyTile.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0400453516A41236003EB6FA /* HeavyTile.cpp */; };
 		0400453A16A4125C003EB6FA /* FallingTileRenderer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0400453816A4125B003EB6FA /* FallingTileRenderer.cpp */; };
@@ -48,6 +50,10 @@
 		9D293CE816071C08000305C8 /* CreateNewWorld_iphone.xib in Resources */ = {isa = PBXBuildFile; fileRef = 9D293CE616071C08000305C8 /* CreateNewWorld_iphone.xib */; };
 		9D293CEB160720D6000305C8 /* worldname_iphone5_3.png in Resources */ = {isa = PBXBuildFile; fileRef = 9D293CEA160720D6000305C8 /* worldname_iphone5_3.png */; };
 		9D293CEC160720D6000305C8 /* worldname_iphone5_3.png in Resources */ = {isa = PBXBuildFile; fileRef = 9D293CEA160720D6000305C8 /* worldname_iphone5_3.png */; };
+		AA1B2C3D4E5F60718293A4B6 /* Frameworks/MetalANGLE.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = AA1B2C3D4E5F60718293A4B5 /* Frameworks/MetalANGLE.xcframework */; };
+		AA1B2C3D4E5F60718293A4B7 /* Frameworks/MetalANGLE.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = AA1B2C3D4E5F60718293A4B5 /* Frameworks/MetalANGLE.xcframework */; };
+		AA1B2C3D4E5F60718293A4B8 /* Frameworks/MetalANGLE.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = AA1B2C3D4E5F60718293A4B5 /* Frameworks/MetalANGLE.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		AA1B2C3D4E5F60718293A4B9 /* Frameworks/MetalANGLE.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = AA1B2C3D4E5F60718293A4B5 /* Frameworks/MetalANGLE.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		D506D3E2161288BD0099FA65 /* Default-568h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 9D959AFF16036BEE00E23A6F /* Default-568h@2x.png */; };
 		D51DC73614581D4E00E3D761 /* itemframe.png in Resources */ = {isa = PBXBuildFile; fileRef = D51DC73514581D4E00E3D761 /* itemframe.png */; };
 		D51DC74314592B8B00E3D761 /* PVRTexture.m in Sources */ = {isa = PBXBuildFile; fileRef = D51DC74214592B8A00E3D761 /* PVRTexture.m */; };
@@ -380,7 +386,7 @@
 		D58BB557146A0B920002C9F5 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D5CF9C48144C225000E4244F /* Foundation.framework */; };
 		D58BB558146A0B920002C9F5 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D5CF9C4A144C225000E4244F /* CoreGraphics.framework */; };
 		D58BB559146A0B920002C9F5 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D5CF9C4C144C225000E4244F /* QuartzCore.framework */; };
-		D58BB55A146A0B920002C9F5 /* OpenGLES.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D5CF9C4E144C225000E4244F /* OpenGLES.framework */; };
+		/* D58BB55A146A0B920002C9F5 REMOVED: OpenGLES.framework stub conflicts with MetalANGLE */
 		D58BB55C146A0B920002C9F5 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = D5CF9C53144C225000E4244F /* InfoPlist.strings */; };
 		D58BB55D146A0B920002C9F5 /* MainWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = D5CF9C5C144C225000E4244F /* MainWindow.xib */; };
 		D58BB55E146A0B920002C9F5 /* minecraftpeViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = D5CF9C69144C225000E4244F /* minecraftpeViewController.xib */; };
@@ -846,6 +852,12 @@
 		D5B50FEE14CFF670005F7284 /* RenderChunk.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D5B50CE714CFF66F005F7284 /* RenderChunk.cpp */; };
 		D5B50FEF14CFF670005F7284 /* RenderList.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D5B50CEA14CFF66F005F7284 /* RenderList.cpp */; };
 		D5B50FF014CFF670005F7284 /* RenderList.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D5B50CEA14CFF66F005F7284 /* RenderList.cpp */; };
+		AA0001031AAAA002005F7284 /* MatrixStack.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AA0001011AAAA001005F7284 /* MatrixStack.cpp */; };
+		AA0001041AAAA002005F7284 /* MatrixStack.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AA0001011AAAA001005F7284 /* MatrixStack.cpp */; };
+		AA0002011BBBB001005F7284 /* SceneDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = AA0002031BBBB001005F7284 /* SceneDelegate.mm */; };
+		AA0002021BBBB001005F7284 /* SceneDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = AA0002031BBBB001005F7284 /* SceneDelegate.mm */; };
+		AA0002051CCCC001005F7284 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA0002071CCCC001005F7284 /* LaunchScreen.storyboard */; };
+		AA0002061CCCC001005F7284 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA0002071CCCC001005F7284 /* LaunchScreen.storyboard */; };
 		D5B50FF114CFF670005F7284 /* Tesselator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D5B50CEC14CFF66F005F7284 /* Tesselator.cpp */; };
 		D5B50FF214CFF670005F7284 /* Tesselator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D5B50CEC14CFF66F005F7284 /* Tesselator.cpp */; };
 		D5B50FF314CFF670005F7284 /* Textures.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D5B50CEF14CFF66F005F7284 /* Textures.cpp */; };
@@ -1025,7 +1037,7 @@
 		D5CF9C49144C225000E4244F /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D5CF9C48144C225000E4244F /* Foundation.framework */; };
 		D5CF9C4B144C225000E4244F /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D5CF9C4A144C225000E4244F /* CoreGraphics.framework */; };
 		D5CF9C4D144C225000E4244F /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D5CF9C4C144C225000E4244F /* QuartzCore.framework */; };
-		D5CF9C4F144C225000E4244F /* OpenGLES.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D5CF9C4E144C225000E4244F /* OpenGLES.framework */; };
+		/* D5CF9C4F144C225000E4244F REMOVED: OpenGLES.framework stub conflicts with MetalANGLE */
 		D5CF9C55144C225000E4244F /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = D5CF9C53144C225000E4244F /* InfoPlist.strings */; };
 		D5CF9C57144C225000E4244F /* main.mm in Sources */ = {isa = PBXBuildFile; fileRef = D5CF9C56144C225000E4244F /* main.mm */; };
 		D5CF9C5B144C225000E4244F /* minecraftpeAppDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = D5CF9C5A144C225000E4244F /* minecraftpeAppDelegate.mm */; };
@@ -1115,6 +1127,8 @@
 		D5D961C914E6AF0C001D1B9D /* Icon-Small@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = D5D961B414E6AF0C001D1B9D /* Icon-Small@2x.png */; };
 		D5D961CA14E6AF0C001D1B9D /* Icon.png in Resources */ = {isa = PBXBuildFile; fileRef = D5D961B514E6AF0C001D1B9D /* Icon.png */; };
 		D5D961CB14E6AF0C001D1B9D /* Icon.png in Resources */ = {isa = PBXBuildFile; fileRef = D5D961B514E6AF0C001D1B9D /* Icon.png */; };
+		CC000001000000000000BB02 /* mojang_logo.png in Resources */ = {isa = PBXBuildFile; fileRef = CC000001000000000000BB01 /* mojang_logo.png */; };
+		CC000001000000000000BB03 /* mojang_logo.png in Resources */ = {isa = PBXBuildFile; fileRef = CC000001000000000000BB01 /* mojang_logo.png */; };
 		D5D961CC14E6AF0C001D1B9D /* Icon@2x_lite.png in Resources */ = {isa = PBXBuildFile; fileRef = D5D961B614E6AF0C001D1B9D /* Icon@2x_lite.png */; };
 		D5D961CD14E6AF0C001D1B9D /* Icon@2x_lite.png in Resources */ = {isa = PBXBuildFile; fileRef = D5D961B614E6AF0C001D1B9D /* Icon@2x_lite.png */; };
 		D5D961CE14E6AF0C001D1B9D /* Icon@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = D5D961B714E6AF0C001D1B9D /* Icon@2x.png */; };
@@ -1147,7 +1161,36 @@
 		D5F3B7DD14548E7900D25470 /* IASKPSToggleSwitchSpecifierViewCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = D5F3B7C814548E7900D25470 /* IASKPSToggleSwitchSpecifierViewCell.xib */; };
 		D5F3B7DE14548E7900D25470 /* IASKSpecifierValuesView.xib in Resources */ = {isa = PBXBuildFile; fileRef = D5F3B7C914548E7900D25470 /* IASKSpecifierValuesView.xib */; };
 		D5F3B7E51454930400D25470 /* InAppSettings.bundle in Resources */ = {isa = PBXBuildFile; fileRef = D5F3B7E41454930400D25470 /* InAppSettings.bundle */; };
+		AA2B3C4D5E6F708192A3B4D5 /* OptionsFile.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AA2B3C4D5E6F708192A3B4C5 /* OptionsFile.cpp */; };
+		AA2B3C4D5E6F708192A3B4D6 /* OptionsItem.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AA2B3C4D5E6F708192A3B4C6 /* OptionsItem.cpp */; };
+		AA2B3C4D5E6F708192A3B4D7 /* GuiElementContainer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AA2B3C4D5E6F708192A3B4C7 /* GuiElementContainer.cpp */; };
+		AA2B3C4D5E6F708192A3B4D8 /* Slider.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AA2B3C4D5E6F708192A3B4C8 /* Slider.cpp */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		AA1B2C3D4E5F60718293A4BA /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				AA1B2C3D4E5F60718293A4B8 /* Frameworks/MetalANGLE.xcframework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AA1B2C3D4E5F60718293A4BB /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				AA1B2C3D4E5F60718293A4B9 /* Frameworks/MetalANGLE.xcframework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		04004532169EE72E003EB6FA /* clouds.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = clouds.png; path = environment/clouds.png; sourceTree = "<group>"; };
@@ -1216,6 +1259,7 @@
 		9D293CE616071C08000305C8 /* CreateNewWorld_iphone.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; name = CreateNewWorld_iphone.xib; path = minecraftpe/dialogs/CreateNewWorld_iphone.xib; sourceTree = "<group>"; };
 		9D293CEA160720D6000305C8 /* worldname_iphone5_3.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = worldname_iphone5_3.png; sourceTree = "<group>"; };
 		9D959AFF16036BEE00E23A6F /* Default-568h@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default-568h@2x.png"; sourceTree = "<group>"; };
+		AA1B2C3D4E5F60718293A4B5 /* Frameworks/MetalANGLE.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = Frameworks/MetalANGLE.xcframework; sourceTree = "<group>"; };
 		D51A8B01146A200000E5D720 /* minecraftpedemo-info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "minecraftpedemo-info.plist"; sourceTree = "<group>"; };
 		D51DC73514581D4E00E3D761 /* itemframe.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = itemframe.png; sourceTree = "<group>"; };
 		D51DC74114592B8A00E3D761 /* PVRTexture.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PVRTexture.h; sourceTree = "<group>"; };
@@ -1935,6 +1979,11 @@
 		D5B50CE914CFF66F005F7284 /* RenderChunkHandler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RenderChunkHandler.h; sourceTree = "<group>"; };
 		D5B50CEA14CFF66F005F7284 /* RenderList.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = RenderList.cpp; sourceTree = "<group>"; };
 		D5B50CEB14CFF66F005F7284 /* RenderList.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RenderList.h; sourceTree = "<group>"; };
+		AA0001011AAAA001005F7284 /* MatrixStack.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MatrixStack.cpp; sourceTree = "<group>"; };
+		AA0001021AAAA001005F7284 /* MatrixStack.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MatrixStack.h; sourceTree = "<group>"; };
+		AA0002031BBBB001005F7284 /* SceneDelegate.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = SceneDelegate.mm; sourceTree = "<group>"; };
+		AA0002041BBBB001005F7284 /* SceneDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SceneDelegate.h; sourceTree = "<group>"; };
+		AA0002071CCCC001005F7284 /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
 		D5B50CEC14CFF66F005F7284 /* Tesselator.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Tesselator.cpp; sourceTree = "<group>"; };
 		D5B50CED14CFF66F005F7284 /* Tesselator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Tesselator.h; sourceTree = "<group>"; };
 		D5B50CEE14CFF66F005F7284 /* TextureData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TextureData.h; sourceTree = "<group>"; };
@@ -2278,22 +2327,21 @@
 		D5B862911538187400F3238A /* StructureRecipes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StructureRecipes.h; sourceTree = "<group>"; };
 		D5BFCF1A14513FF400A443B0 /* CreateNewWorld_ipad.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; name = CreateNewWorld_ipad.xib; path = minecraftpe/dialogs/CreateNewWorld_ipad.xib; sourceTree = "<group>"; };
 		D5CF9C42144C225000E4244F /* minecraftpe.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = minecraftpe.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		BB000001000000000000AA00 /* Metal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Metal.framework; path = System/Library/Frameworks/Metal.framework; sourceTree = SDKROOT; };
 		D5CF9C46144C225000E4244F /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 		D5CF9C48144C225000E4244F /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		D5CF9C4A144C225000E4244F /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
 		D5CF9C4C144C225000E4244F /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
-		D5CF9C4E144C225000E4244F /* OpenGLES.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGLES.framework; path = System/Library/Frameworks/OpenGLES.framework; sourceTree = SDKROOT; };
+		/* D5CF9C4E144C225000E4244F REMOVED: OpenGLES.framework file reference */
 		D5CF9C52144C225000E4244F /* minecraftpe-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "minecraftpe-Info.plist"; sourceTree = "<group>"; };
 		D5CF9C54144C225000E4244F /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		D5CF9C56144C225000E4244F /* main.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; lineEnding = 0; path = main.mm; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		D5CF9C58144C225000E4244F /* minecraftpe-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "minecraftpe-Prefix.pch"; sourceTree = "<group>"; };
 		D5CF9C59144C225000E4244F /* minecraftpeAppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = minecraftpeAppDelegate.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		D5CF9C5A144C225000E4244F /* minecraftpeAppDelegate.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; lineEnding = 0; path = minecraftpeAppDelegate.mm; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
-		D5CF9C5D144C225000E4244F /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/MainWindow.xib; sourceTree = "<group>"; };
 		D5CF9C63144C225000E4244F /* EAGLView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = EAGLView.h; sourceTree = "<group>"; };
 		D5CF9C64144C225000E4244F /* EAGLView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = EAGLView.m; sourceTree = "<group>"; };
 		D5CF9C66144C225000E4244F /* minecraftpeViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = minecraftpeViewController.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
-		D5CF9C6A144C225000E4244F /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/minecraftpeViewController.xib; sourceTree = "<group>"; };
 		D5CFA01C144C453900E4244F /* minecraftpeViewController.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; lineEnding = 0; path = minecraftpeViewController.mm; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		D5D381F015A1A1CF00B6C50E /* FillingContainer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FillingContainer.cpp; sourceTree = "<group>"; };
 		D5D381F115A1A1CF00B6C50E /* FillingContainer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FillingContainer.h; sourceTree = "<group>"; };
@@ -2363,6 +2411,7 @@
 		D5D961B314E6AF0C001D1B9D /* Icon-Small@2x_lite.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Icon-Small@2x_lite.png"; sourceTree = "<group>"; };
 		D5D961B414E6AF0C001D1B9D /* Icon-Small@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Icon-Small@2x.png"; sourceTree = "<group>"; };
 		D5D961B514E6AF0C001D1B9D /* Icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Icon.png; sourceTree = "<group>"; };
+		CC000001000000000000BB01 /* mojang_logo.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = mojang_logo.png; sourceTree = "<group>"; };
 		D5D961B614E6AF0C001D1B9D /* Icon@2x_lite.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Icon@2x_lite.png"; sourceTree = "<group>"; };
 		D5D961B714E6AF0C001D1B9D /* Icon@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Icon@2x.png"; sourceTree = "<group>"; };
 		D5E1BA981451C881007DCC4F /* Default.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Default.png; sourceTree = "<group>"; };
@@ -2408,6 +2457,12 @@
 		D5F3B7C814548E7900D25470 /* IASKPSToggleSwitchSpecifierViewCell.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = IASKPSToggleSwitchSpecifierViewCell.xib; sourceTree = "<group>"; };
 		D5F3B7C914548E7900D25470 /* IASKSpecifierValuesView.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = IASKSpecifierValuesView.xib; sourceTree = "<group>"; };
 		D5F3B7E41454930400D25470 /* InAppSettings.bundle */ = {isa = PBXFileReference; explicitFileType = "wrapper.installer-pkg"; path = InAppSettings.bundle; sourceTree = "<group>"; };
+		E0A97D892F5EFD4A00CF6721 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/MainWindow.xib; sourceTree = "<group>"; };
+		E0A97D8A2F5EFD4A00CF6721 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/minecraftpeViewController.xib; sourceTree = "<group>"; };
+		AA2B3C4D5E6F708192A3B4C5 /* OptionsFile.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OptionsFile.cpp; sourceTree = "<group>"; };
+		AA2B3C4D5E6F708192A3B4C6 /* OptionsItem.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OptionsItem.cpp; sourceTree = "<group>"; };
+		AA2B3C4D5E6F708192A3B4C7 /* GuiElementContainer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = GuiElementContainer.cpp; sourceTree = "<group>"; };
+		AA2B3C4D5E6F708192A3B4C8 /* Slider.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Slider.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -2422,7 +2477,9 @@
 				D58BB557146A0B920002C9F5 /* Foundation.framework in Frameworks */,
 				D58BB558146A0B920002C9F5 /* CoreGraphics.framework in Frameworks */,
 				D58BB559146A0B920002C9F5 /* QuartzCore.framework in Frameworks */,
-				D58BB55A146A0B920002C9F5 /* OpenGLES.framework in Frameworks */,
+				/* REMOVED: OpenGLES.framework — stubs conflict with MetalANGLE */
+				AA1B2C3D4E5F60718293A4B7 /* Frameworks/MetalANGLE.xcframework in Frameworks */,
+				BB000001000000000000AA02 /* Metal.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2437,7 +2494,9 @@
 				D5CF9C49144C225000E4244F /* Foundation.framework in Frameworks */,
 				D5CF9C4B144C225000E4244F /* CoreGraphics.framework in Frameworks */,
 				D5CF9C4D144C225000E4244F /* QuartzCore.framework in Frameworks */,
-				D5CF9C4F144C225000E4244F /* OpenGLES.framework in Frameworks */,
+				/* REMOVED: OpenGLES.framework — stubs conflict with MetalANGLE */
+				AA1B2C3D4E5F60718293A4B6 /* Frameworks/MetalANGLE.xcframework in Frameworks */,
+				BB000001000000000000AA01 /* Metal.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3173,6 +3232,7 @@
 				D5B50C8914CFF66F005F7284 /* Options.h */,
 				D5B50C8A14CFF66F005F7284 /* OptionStrings.cpp */,
 				D5B50C8B14CFF66F005F7284 /* OptionStrings.h */,
+				AA2B3C4D5E6F708192A3B4C5 /* OptionsFile.cpp */,
 				D5B50C8C14CFF66F005F7284 /* particle */,
 				D5B50C9C14CFF66F005F7284 /* PixelCalc.h */,
 				D5B50C9D14CFF66F005F7284 /* player */,
@@ -3230,6 +3290,9 @@
 				042A91AA16B17517007ABBC6 /* OptionsPane.h */,
 				042A91AB16B17517007ABBC6 /* TextBox.cpp */,
 				042A91AC16B17517007ABBC6 /* TextBox.h */,
+				AA2B3C4D5E6F708192A3B4C6 /* OptionsItem.cpp */,
+				AA2B3C4D5E6F708192A3B4C7 /* GuiElementContainer.cpp */,
+				AA2B3C4D5E6F708192A3B4C8 /* Slider.cpp */,
 				D5B50C2814CFF66F005F7284 /* Button.cpp */,
 				D5B50C2914CFF66F005F7284 /* Button.h */,
 				D5951ED6159348C50043A12A /* InventoryPane.cpp */,
@@ -3469,6 +3532,8 @@
 				D5D381FE15A1A26000B6C50E /* tileentity */,
 				D5B50CEA14CFF66F005F7284 /* RenderList.cpp */,
 				D5B50CEB14CFF66F005F7284 /* RenderList.h */,
+				AA0001011AAAA001005F7284 /* MatrixStack.cpp */,
+				AA0001021AAAA001005F7284 /* MatrixStack.h */,
 				D5B50CEC14CFF66F005F7284 /* Tesselator.cpp */,
 				D5B50CED14CFF66F005F7284 /* Tesselator.h */,
 				D5B50CEE14CFF66F005F7284 /* TextureData.h */,
@@ -4290,7 +4355,8 @@
 				D5CF9C48144C225000E4244F /* Foundation.framework */,
 				D5CF9C4A144C225000E4244F /* CoreGraphics.framework */,
 				D5CF9C4C144C225000E4244F /* QuartzCore.framework */,
-				D5CF9C4E144C225000E4244F /* OpenGLES.framework */,
+				/* REMOVED: OpenGLES.framework */
+				AA1B2C3D4E5F60718293A4B5 /* Frameworks/MetalANGLE.xcframework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -4311,6 +4377,9 @@
 				D5CF9C51144C225000E4244F /* Supporting Files */,
 				0419D9B8167F2A720080CB96 /* ShowKeyboardView.h */,
 				0419D9B9167F2A720080CB96 /* ShowKeyboardView.mm */,
+				AA0002041BBBB001005F7284 /* SceneDelegate.h */,
+				AA0002031BBBB001005F7284 /* SceneDelegate.mm */,
+				AA0002071CCCC001005F7284 /* LaunchScreen.storyboard */,
 			);
 			name = Project;
 			path = minecraftpe;
@@ -4356,6 +4425,7 @@
 				D5D961B314E6AF0C001D1B9D /* Icon-Small@2x_lite.png */,
 				D5D961B414E6AF0C001D1B9D /* Icon-Small@2x.png */,
 				D5D961B514E6AF0C001D1B9D /* Icon.png */,
+				CC000001000000000000BB01 /* mojang_logo.png */,
 				D5D961B614E6AF0C001D1B9D /* Icon@2x_lite.png */,
 				D5D961B714E6AF0C001D1B9D /* Icon@2x.png */,
 			);
@@ -4493,6 +4563,7 @@
 				D58BB46D146A0B910002C9F5 /* Sources */,
 				D58BB552146A0B920002C9F5 /* Frameworks */,
 				D58BB55B146A0B920002C9F5 /* Resources */,
+				AA1B2C3D4E5F60718293A4BB /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
@@ -4510,6 +4581,7 @@
 				D5CF9C3E144C225000E4244F /* Sources */,
 				D5CF9C3F144C225000E4244F /* Frameworks */,
 				D5CF9C40144C225000E4244F /* Resources */,
+				AA1B2C3D4E5F60718293A4BA /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
@@ -4526,14 +4598,16 @@
 		D5CF9C39144C225000E4244F /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0420;
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 2630;
 			};
 			buildConfigurationList = D5CF9C3C144C225000E4244F /* Build configuration list for PBXProject "minecraftpe" */;
 			compatibilityVersion = "Xcode 3.2";
-			developmentRegion = English;
+			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
+				Base,
 			);
 			mainGroup = D5CF9C37144C225000E4244F;
 			productRefGroup = D5CF9C43144C225000E4244F /* Products */;
@@ -4551,6 +4625,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AA0002051CCCC001005F7284 /* LaunchScreen.storyboard in Resources */,
 				D58BB55C146A0B920002C9F5 /* InfoPlist.strings in Resources */,
 				D58BB55D146A0B920002C9F5 /* MainWindow.xib in Resources */,
 				D58BB55E146A0B920002C9F5 /* minecraftpeViewController.xib in Resources */,
@@ -4639,6 +4714,7 @@
 				D5D961C714E6AF0C001D1B9D /* Icon-Small@2x_lite.png in Resources */,
 				D5D961C914E6AF0C001D1B9D /* Icon-Small@2x.png in Resources */,
 				D5D961CB14E6AF0C001D1B9D /* Icon.png in Resources */,
+				CC000001000000000000BB03 /* mojang_logo.png in Resources */,
 				D5D961CD14E6AF0C001D1B9D /* Icon@2x_lite.png in Resources */,
 				D5D961CF14E6AF0C001D1B9D /* Icon@2x.png in Resources */,
 				D5251DBC1538192700FC82C8 /* CMakeLists.txt in Resources */,
@@ -4767,6 +4843,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AA0002061CCCC001005F7284 /* LaunchScreen.storyboard in Resources */,
 				D506D3E2161288BD0099FA65 /* Default-568h@2x.png in Resources */,
 				D5CF9C55144C225000E4244F /* InfoPlist.strings in Resources */,
 				D5CF9C5E144C225000E4244F /* MainWindow.xib in Resources */,
@@ -4856,6 +4933,7 @@
 				D5D961C614E6AF0C001D1B9D /* Icon-Small@2x_lite.png in Resources */,
 				D5D961C814E6AF0C001D1B9D /* Icon-Small@2x.png in Resources */,
 				D5D961CA14E6AF0C001D1B9D /* Icon.png in Resources */,
+				CC000001000000000000BB02 /* mojang_logo.png in Resources */,
 				D5D961CC14E6AF0C001D1B9D /* Icon@2x_lite.png in Resources */,
 				D5D961CE14E6AF0C001D1B9D /* Icon@2x.png in Resources */,
 				D5251DBB1538192700FC82C8 /* CMakeLists.txt in Resources */,
@@ -5002,6 +5080,7 @@
 				D58BB46F146A0B910002C9F5 /* minecraftpeAppDelegate.mm in Sources */,
 				D58BB470146A0B910002C9F5 /* EAGLView.m in Sources */,
 				D58BB471146A0B910002C9F5 /* minecraftpeViewController.mm in Sources */,
+				AA0002011BBBB001005F7284 /* SceneDelegate.mm in Sources */,
 				D58BB53E146A0B910002C9F5 /* CreateNewWorldViewController.mm in Sources */,
 				D58BB53F146A0B910002C9F5 /* BaseDialogController.mm in Sources */,
 				D58BB540146A0B910002C9F5 /* IASKAppSettingsViewController.m in Sources */,
@@ -5085,6 +5164,7 @@
 				D5B50FEC14CFF670005F7284 /* DynamicTexture.cpp in Sources */,
 				D5B50FEE14CFF670005F7284 /* RenderChunk.cpp in Sources */,
 				D5B50FF014CFF670005F7284 /* RenderList.cpp in Sources */,
+				AA0001031AAAA002005F7284 /* MatrixStack.cpp in Sources */,
 				D5B50FF214CFF670005F7284 /* Tesselator.cpp in Sources */,
 				D5B50FF414CFF670005F7284 /* Textures.cpp in Sources */,
 				D5B50FF614CFF670005F7284 /* TileRenderer.cpp in Sources */,
@@ -5343,6 +5423,7 @@
 				D5CF9C5B144C225000E4244F /* minecraftpeAppDelegate.mm in Sources */,
 				D5CF9C65144C225000E4244F /* EAGLView.m in Sources */,
 				D5CFA01D144C453900E4244F /* minecraftpeViewController.mm in Sources */,
+				AA0002021BBBB001005F7284 /* SceneDelegate.mm in Sources */,
 				D5A55E4914500EDE00A7571B /* CreateNewWorldViewController.mm in Sources */,
 				D5A55E4D145036AE00A7571B /* BaseDialogController.mm in Sources */,
 				D5F3B7CA14548E7900D25470 /* IASKAppSettingsViewController.m in Sources */,
@@ -5426,6 +5507,7 @@
 				D5B50FEB14CFF670005F7284 /* DynamicTexture.cpp in Sources */,
 				D5B50FED14CFF670005F7284 /* RenderChunk.cpp in Sources */,
 				D5B50FEF14CFF670005F7284 /* RenderList.cpp in Sources */,
+				AA0001041AAAA002005F7284 /* MatrixStack.cpp in Sources */,
 				D5B50FF114CFF670005F7284 /* Tesselator.cpp in Sources */,
 				D5B50FF314CFF670005F7284 /* Textures.cpp in Sources */,
 				D5B50FF514CFF670005F7284 /* TileRenderer.cpp in Sources */,
@@ -5699,6 +5781,10 @@
 				042A91B016B17517007ABBC6 /* OptionsGroup.cpp in Sources */,
 				042A91B116B17517007ABBC6 /* OptionsPane.cpp in Sources */,
 				042A91B216B17517007ABBC6 /* TextBox.cpp in Sources */,
+				AA2B3C4D5E6F708192A3B4D5 /* OptionsFile.cpp in Sources */,
+				AA2B3C4D5E6F708192A3B4D6 /* OptionsItem.cpp in Sources */,
+				AA2B3C4D5E6F708192A3B4D7 /* GuiElementContainer.cpp in Sources */,
+				AA2B3C4D5E6F708192A3B4D8 /* Slider.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -5716,7 +5802,7 @@
 		D5CF9C5C144C225000E4244F /* MainWindow.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
-				D5CF9C5D144C225000E4244F /* en */,
+				E0A97D892F5EFD4A00CF6721 /* Base */,
 			);
 			name = MainWindow.xib;
 			sourceTree = "<group>";
@@ -5724,7 +5810,7 @@
 		D5CF9C69144C225000E4244F /* minecraftpeViewController.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
-				D5CF9C6A144C225000E4244F /* en */,
+				E0A97D8A2F5EFD4A00CF6721 /* Base */,
 			);
 			name = minecraftpeViewController.xib;
 			sourceTree = "<group>";
@@ -5736,9 +5822,9 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ARCHS = "$(ARCHS_UNIVERSAL_IPHONE_OS)";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution: Mojang AB";
 				COPY_PHASE_STRIP = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_PREPROCESSOR_DEFINITIONS = PUBLISH;
 				GCC_VERSION = com.apple.compilers.llvmgcc42;
@@ -5748,11 +5834,11 @@
 				GCC_WARN_HIDDEN_VIRTUAL_FUNCTIONS = NO;
 				GCC_WARN_NON_VIRTUAL_DESTRUCTOR = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 4.3;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				OTHER_CFLAGS = "-DNS_BLOCK_ASSERTIONS=1";
-				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "C93D3524-5C6F-466E-B12B-833663B7EAE0";
 				RUN_CLANG_STATIC_ANALYZER = NO;
-				SDKROOT = iphoneos6.0;
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VALIDATE_PRODUCT = YES;
 			};
@@ -5761,19 +5847,29 @@
 		D50BE20915EE05B8008AA75E /* Ad-Hoc */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				ARCHS = "$(ARCHS_STANDARD)";
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 83D8U73S6H;
+				GCC_PRECOMPILE_PREFIX_HEADER = NO;
+				CLANG_ENABLE_MODULES = NO;
 				GCC_PREFIX_HEADER = "minecraftpe/minecraftpe-Prefix.pch";
 				GCC_PREPROCESSOR_DEFINITIONS = "";
 				"GCC_THUMB_SUPPORT[arch=armv7]" = NO;
-				GCC_VERSION = com.apple.compilers.llvmgcc42;
+				GCC_VERSION = "";
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = NO;
 				HEADER_SEARCH_PATHS = "";
+				FRAMEWORK_SEARCH_PATHS = "$(SRCROOT)/Frameworks/MetalANGLE.xcframework/ios-arm64_armv7 $(SRCROOT)/Frameworks/MetalANGLE.xcframework/ios-arm64_i386_x86_64-simulator $(SRCROOT)/Frameworks";
 				INFOPLIST_FILE = "minecraftpe/minecraftpe-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 4.3;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.6;
+				PRODUCT_BUNDLE_IDENTIFIER = com.sierranevada.minecraftpe0.6.1;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				RUN_CLANG_STATIC_ANALYZER = NO;
-				SDKROOT = iphoneos6.0;
-				VALID_ARCHS = "i386 armv6 armv7";
+				SDKROOT = iphoneos;
 				WRAPPER_EXTENSION = app;
 			};
 			name = "Ad-Hoc";
@@ -5781,22 +5877,27 @@
 		D50BE20A15EE05B8008AA75E /* Ad-Hoc */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				ARCHS = ARCHS_STANDARD;
+				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				GCC_PRECOMPILE_PREFIX_HEADER = NO;
+				CLANG_ENABLE_MODULES = NO;
 				GCC_PREFIX_HEADER = "minecraftpe/minecraftpe-Prefix.pch";
 				"GCC_THUMB_SUPPORT[arch=armv7]" = NO;
-				GCC_VERSION = com.apple.compilers.llvmgcc42;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = NO;
 				HEADER_SEARCH_PATHS = "";
+				FRAMEWORK_SEARCH_PATHS = "$(SRCROOT)/Frameworks/MetalANGLE.xcframework/ios-arm64_armv7 $(SRCROOT)/Frameworks/MetalANGLE.xcframework/ios-arm64_i386_x86_64-simulator $(SRCROOT)/Frameworks";
 				INFOPLIST_FILE = "minecraftpe/minecraftpedemo-info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 6.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				OTHER_CFLAGS = (
 					"-DNS_BLOCK_ASSERTIONS=1",
 					"-DDEMO_MODE",
 				);
 				"OTHER_CPLUSPLUSFLAGS[arch=*]" = "$(OTHER_CFLAGS)";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.mojang.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = minecraftpe.demo;
 				RUN_CLANG_STATIC_ANALYZER = NO;
-				VALID_ARCHS = "i386 armv6 armv7";
 				WRAPPER_EXTENSION = app;
 			};
 			name = "Ad-Hoc";
@@ -5804,18 +5905,23 @@
 		D58BB5B3146A0B920002C9F5 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				ARCHS = ARCHS_STANDARD;
+				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				GCC_PRECOMPILE_PREFIX_HEADER = NO;
+				CLANG_ENABLE_MODULES = NO;
 				GCC_PREFIX_HEADER = "minecraftpe/minecraftpe-Prefix.pch";
 				"GCC_THUMB_SUPPORT[arch=armv7]" = NO;
-				GCC_VERSION = com.apple.compilers.llvmgcc42;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = NO;
 				HEADER_SEARCH_PATHS = "";
+				FRAMEWORK_SEARCH_PATHS = "$(SRCROOT)/Frameworks/MetalANGLE.xcframework/ios-arm64_armv7 $(SRCROOT)/Frameworks/MetalANGLE.xcframework/ios-arm64_i386_x86_64-simulator $(SRCROOT)/Frameworks";
 				INFOPLIST_FILE = "minecraftpe/minecraftpedemo-info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 6.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				OTHER_CFLAGS = "-DDEMO_MODE";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.mojang.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = minecraftpe.demo;
 				RUN_CLANG_STATIC_ANALYZER = NO;
-				VALID_ARCHS = "i386 armv6 armv7";
 				WRAPPER_EXTENSION = app;
 			};
 			name = Debug;
@@ -5823,22 +5929,27 @@
 		D58BB5B4146A0B920002C9F5 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				ARCHS = ARCHS_STANDARD;
+				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				GCC_PRECOMPILE_PREFIX_HEADER = NO;
+				CLANG_ENABLE_MODULES = NO;
 				GCC_PREFIX_HEADER = "minecraftpe/minecraftpe-Prefix.pch";
 				"GCC_THUMB_SUPPORT[arch=armv7]" = NO;
-				GCC_VERSION = com.apple.compilers.llvmgcc42;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = NO;
 				HEADER_SEARCH_PATHS = "";
+				FRAMEWORK_SEARCH_PATHS = "$(SRCROOT)/Frameworks/MetalANGLE.xcframework/ios-arm64_armv7 $(SRCROOT)/Frameworks/MetalANGLE.xcframework/ios-arm64_i386_x86_64-simulator $(SRCROOT)/Frameworks";
 				INFOPLIST_FILE = "minecraftpe/minecraftpedemo-info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 6.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				OTHER_CFLAGS = (
 					"-DNS_BLOCK_ASSERTIONS=1",
 					"-DDEMO_MODE",
 				);
 				"OTHER_CPLUSPLUSFLAGS[arch=*]" = "$(OTHER_CFLAGS)";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.mojang.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = minecraftpe.demo;
 				RUN_CLANG_STATIC_ANALYZER = NO;
-				VALID_ARCHS = "i386 armv6 armv7";
 				WRAPPER_EXTENSION = app;
 			};
 			name = Release;
@@ -5847,9 +5958,9 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ARCHS = "$(ARCHS_UNIVERSAL_IPHONE_OS)";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution: Mojang AB";
 				COPY_PHASE_STRIP = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_VERSION = com.apple.compilers.llvmgcc42;
 				GCC_WARN_ABOUT_MISSING_FIELD_INITIALIZERS = YES;
@@ -5858,11 +5969,11 @@
 				GCC_WARN_HIDDEN_VIRTUAL_FUNCTIONS = NO;
 				GCC_WARN_NON_VIRTUAL_DESTRUCTOR = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 4.3;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				OTHER_CFLAGS = "-DNS_BLOCK_ASSERTIONS=1";
-				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "64BA8967-1A9A-4980-972C-42E75AD5E023";
 				RUN_CLANG_STATIC_ANALYZER = NO;
-				SDKROOT = iphoneos6.0;
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VALIDATE_PRODUCT = YES;
 			};
@@ -5871,25 +5982,32 @@
 		D5A20ADC146AAD9C00A52FEC /* AppStore */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution: Mojang AB";
-				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				ARCHS = "$(ARCHS_STANDARD)";
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 83D8U73S6H;
+				GCC_PRECOMPILE_PREFIX_HEADER = NO;
+				CLANG_ENABLE_MODULES = NO;
 				GCC_PREFIX_HEADER = "minecraftpe/minecraftpe-Prefix.pch";
 				GCC_PREPROCESSOR_DEFINITIONS = PUBLISH;
 				"GCC_THUMB_SUPPORT[arch=armv7]" = NO;
-				GCC_VERSION = com.apple.compilers.llvmgcc42;
+				GCC_VERSION = "";
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = NO;
 				HEADER_SEARCH_PATHS = "";
+				FRAMEWORK_SEARCH_PATHS = "$(SRCROOT)/Frameworks/MetalANGLE.xcframework/ios-arm64_armv7 $(SRCROOT)/Frameworks/MetalANGLE.xcframework/ios-arm64_i386_x86_64-simulator $(SRCROOT)/Frameworks";
 				INFOPLIST_FILE = "minecraftpe/minecraftpe-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 4.3;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.6;
 				OTHER_CFLAGS = (
 					"-DNS_BLOCK_ASSERTIONS=1",
 					"-DANDROID_PUBLISH",
 				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.sierranevada.minecraftpe0.6.1;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "1B194957-98CF-49B7-A0E7-76692B4B722D";
+				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				RUN_CLANG_STATIC_ANALYZER = NO;
-				SDKROOT = iphoneos6.0;
-				VALID_ARCHS = "i386 armv6 armv7";
+				SDKROOT = iphoneos;
 				WRAPPER_EXTENSION = app;
 			};
 			name = AppStore;
@@ -5897,24 +6015,29 @@
 		D5A20ADD146AAD9C00A52FEC /* AppStore */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = ARCHS_STANDARD;
+				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
+				CLANG_ENABLE_OBJC_WEAK = YES;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
-				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PRECOMPILE_PREFIX_HEADER = NO;
+				CLANG_ENABLE_MODULES = NO;
 				GCC_PREFIX_HEADER = "minecraftpe/minecraftpe-Prefix.pch";
 				"GCC_THUMB_SUPPORT[arch=armv7]" = NO;
-				GCC_VERSION = com.apple.compilers.llvmgcc42;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = NO;
 				HEADER_SEARCH_PATHS = "";
+				FRAMEWORK_SEARCH_PATHS = "$(SRCROOT)/Frameworks/MetalANGLE.xcframework/ios-arm64_armv7 $(SRCROOT)/Frameworks/MetalANGLE.xcframework/ios-arm64_i386_x86_64-simulator $(SRCROOT)/Frameworks";
 				INFOPLIST_FILE = "minecraftpe/minecraftpedemo-info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 6.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				OTHER_CFLAGS = (
 					"-DNS_BLOCK_ASSERTIONS=1",
 					"-DDEMO_MODE",
 					"-DANDROID_PUBLISH",
 				);
+				PRODUCT_BUNDLE_IDENTIFIER = "com.mojang.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = minecraftpe.demo;
 				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "";
 				RUN_CLANG_STATIC_ANALYZER = NO;
-				VALID_ARCHS = "i386 armv6 armv7";
 				WRAPPER_EXTENSION = app;
 			};
 			name = AppStore;
@@ -5923,9 +6046,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ARCHS = "$(ARCHS_UNIVERSAL_IPHONE_OS)";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = NO;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_OPTIMIZATION_LEVEL = 0;
@@ -5942,9 +6066,11 @@
 				GCC_WARN_HIDDEN_VIRTUAL_FUNCTIONS = NO;
 				GCC_WARN_NON_VIRTUAL_DESTRUCTOR = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 4.3;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
+				ONLY_ACTIVE_ARCH = YES;
 				RUN_CLANG_STATIC_ANALYZER = NO;
-				SDKROOT = iphoneos6.0;
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
@@ -5953,9 +6079,9 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ARCHS = "$(ARCHS_UNIVERSAL_IPHONE_OS)";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_PREPROCESSOR_DEFINITIONS = PUBLISH;
 				GCC_VERSION = com.apple.compilers.llvmgcc42;
@@ -5965,10 +6091,11 @@
 				GCC_WARN_HIDDEN_VIRTUAL_FUNCTIONS = NO;
 				GCC_WARN_NON_VIRTUAL_DESTRUCTOR = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 4.3;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				OTHER_CFLAGS = "-DNS_BLOCK_ASSERTIONS=1";
 				RUN_CLANG_STATIC_ANALYZER = NO;
-				SDKROOT = iphoneos6.0;
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VALIDATE_PRODUCT = YES;
 			};
@@ -5977,19 +6104,28 @@
 		D5CF9C6F144C225000E4244F /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				ARCHS = "$(ARCHS_STANDARD)";
+				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 83D8U73S6H;
+				GCC_PRECOMPILE_PREFIX_HEADER = NO;
+				CLANG_ENABLE_MODULES = NO;
 				GCC_PREFIX_HEADER = "minecraftpe/minecraftpe-Prefix.pch";
 				GCC_PREPROCESSOR_DEFINITIONS = "DEBUG=1";
 				"GCC_THUMB_SUPPORT[arch=armv7]" = NO;
-				GCC_VERSION = com.apple.compilers.llvmgcc42;
+				GCC_VERSION = "";
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = NO;
 				HEADER_SEARCH_PATHS = "";
+				FRAMEWORK_SEARCH_PATHS = "$(SRCROOT)/Frameworks/MetalANGLE.xcframework/ios-arm64_armv7 $(SRCROOT)/Frameworks/MetalANGLE.xcframework/ios-arm64_i386_x86_64-simulator $(SRCROOT)/Frameworks";
 				INFOPLIST_FILE = "minecraftpe/minecraftpe-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 4.3;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.6;
+				PRODUCT_BUNDLE_IDENTIFIER = com.sierranevada.minecraftpe0.6.1;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				RUN_CLANG_STATIC_ANALYZER = NO;
-				SDKROOT = iphoneos6.0;
-				VALID_ARCHS = "i386 armv6 armv7";
+				SDKROOT = iphoneos;
 				WRAPPER_EXTENSION = app;
 			};
 			name = Debug;
@@ -5997,19 +6133,28 @@
 		D5CF9C70144C225000E4244F /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				ARCHS = "$(ARCHS_STANDARD)";
+				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 83D8U73S6H;
+				GCC_PRECOMPILE_PREFIX_HEADER = NO;
+				CLANG_ENABLE_MODULES = NO;
 				GCC_PREFIX_HEADER = "minecraftpe/minecraftpe-Prefix.pch";
 				GCC_PREPROCESSOR_DEFINITIONS = "";
 				"GCC_THUMB_SUPPORT[arch=armv7]" = NO;
-				GCC_VERSION = com.apple.compilers.llvmgcc42;
+				GCC_VERSION = "";
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = NO;
 				HEADER_SEARCH_PATHS = "";
+				FRAMEWORK_SEARCH_PATHS = "$(SRCROOT)/Frameworks/MetalANGLE.xcframework/ios-arm64_armv7 $(SRCROOT)/Frameworks/MetalANGLE.xcframework/ios-arm64_i386_x86_64-simulator $(SRCROOT)/Frameworks";
 				INFOPLIST_FILE = "minecraftpe/minecraftpe-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 4.3;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.6;
+				PRODUCT_BUNDLE_IDENTIFIER = com.sierranevada.minecraftpe0.6.1;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				RUN_CLANG_STATIC_ANALYZER = NO;
-				SDKROOT = iphoneos6.0;
-				VALID_ARCHS = "i386 armv6 armv7";
+				SDKROOT = iphoneos;
 				WRAPPER_EXTENSION = app;
 			};
 			name = Release;

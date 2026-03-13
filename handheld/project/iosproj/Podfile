@@ -1,5 +1,6 @@
+# MetalANGLE is linked directly as an XCFramework (Frameworks/MetalANGLE.xcframework)
+# No CocoaPods dependencies needed.
 platform :ios, '16.0'
 
 target 'minecraftpe' do
-  pod 'MetalANGLE'
 end

@@ -1,143 +1,41 @@
 //
 //  EAGLView.m
-//  OpenGLES_iPhone
-//
-//  Created by mmalc Crawford on 11/18/10.
-//  Copyright 2010 Apple Inc. All rights reserved.
+//  minecraftpe
 //
 
 #import "EAGLView.h"
-#import <QuartzCore/QuartzCore.h>
-
-@interface EAGLView (PrivateMethods)
-- (void)createFramebuffer;
-- (void)deleteFramebuffer;
-@end
 
 @implementation EAGLView
 
-@synthesize context;
-
-// MGLLayer replaces CAEAGLLayer as the backing layer.
+// Use MGLLayer as the backing layer — the MetalANGLE equivalent of CAEAGLLayer.
 + (Class)layerClass
 {
     return [MGLLayer class];
 }
 
-- (id)initWithCoder:(NSCoder*)coder
+- (instancetype)initWithCoder:(NSCoder *)coder
 {
     self = [super initWithCoder:coder];
     if (self) {
-        MGLLayer *mglLayer = (MGLLayer *)self.layer;
-        mglLayer.opaque = YES;
-        mglLayer.drawableColorFormat = MGLDrawableColorFormatRGBA8888;
-        mglLayer.drawableDepthFormat = MGLDrawableDepthFormat24;
-        mglLayer.retainedBacking    = NO;
-
-        if ([[UIScreen mainScreen] respondsToSelector:@selector(scale)]
-            && [self respondsToSelector:@selector(setContentScaleFactor:)])
-        {
-            viewScale = [UIScreen mainScreen].scale;
-            NSLog(@"Scale is : %f\n", viewScale);
-            [self setContentScaleFactor:viewScale];
-            mglLayer.contentsScale = viewScale;
-        }
+        self.contentScaleFactor = [UIScreen mainScreen].scale;
+        self.multipleTouchEnabled = YES;
     }
     return self;
 }
 
-- (void)dealloc
+- (instancetype)initWithFrame:(CGRect)frame
 {
-    [self deleteFramebuffer];
-    [context release];
-    [super dealloc];
-}
-
-- (void)setContext:(MGLContext *)newContext
-{
-    if (context != newContext) {
-        [self deleteFramebuffer];
-        [context release];
-        context = [newContext retain];
-        [MGLContext setCurrentContext:nil];
+    self = [super initWithFrame:frame];
+    if (self) {
+        self.contentScaleFactor = [UIScreen mainScreen].scale;
+        self.multipleTouchEnabled = YES;
     }
+    return self;
 }
 
-- (void)createFramebuffer
+- (MGLLayer *)glLayer
 {
-    if (context && !defaultFramebuffer) {
-        [MGLContext setCurrentContext:context];
-
-        glGenFramebuffers(1, &defaultFramebuffer);
-        glBindFramebuffer(GL_FRAMEBUFFER, defaultFramebuffer);
-
-        glGenRenderbuffers(1, &colorRenderbuffer);
-        glBindRenderbuffer(GL_RENDERBUFFER, colorRenderbuffer);
-        [context renderbufferStorage:GL_RENDERBUFFER fromDrawable:(MGLLayer *)self.layer];
-        glGetRenderbufferParameteriv(GL_RENDERBUFFER, GL_RENDERBUFFER_WIDTH,  &framebufferWidth);
-        glGetRenderbufferParameteriv(GL_RENDERBUFFER, GL_RENDERBUFFER_HEIGHT, &framebufferHeight);
-        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, colorRenderbuffer);
-
-        glGenRenderbuffersOES(1, &_depthRenderBuffer);
-        glBindRenderbufferOES(GL_RENDERBUFFER_OES, _depthRenderBuffer);
-        glRenderbufferStorageOES(GL_RENDERBUFFER_OES, GL_DEPTH_COMPONENT24_OES, framebufferWidth, framebufferHeight);
-        glFramebufferRenderbufferOES(GL_FRAMEBUFFER_OES, GL_DEPTH_ATTACHMENT_OES, GL_RENDERBUFFER_OES, _depthRenderBuffer);
-
-        NSLog(@"Created framebuffer with size %d, %d\n", framebufferWidth, framebufferHeight);
-
-        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-            NSLog(@"Failed to make complete framebuffer object %x", glCheckFramebufferStatus(GL_FRAMEBUFFER));
-    }
-}
-
-- (void)deleteFramebuffer
-{
-    if (context) {
-        [MGLContext setCurrentContext:context];
-
-        if (defaultFramebuffer) {
-            glDeleteFramebuffers(1, &defaultFramebuffer);
-            defaultFramebuffer = 0;
-        }
-        if (colorRenderbuffer) {
-            glDeleteRenderbuffers(1, &colorRenderbuffer);
-            colorRenderbuffer = 0;
-        }
-    }
-}
-
-- (void)setFramebuffer
-{
-    if (context) {
-        [MGLContext setCurrentContext:context];
-
-        if (!defaultFramebuffer)
-            [self createFramebuffer];
-
-        glBindFramebuffer(GL_FRAMEBUFFER, defaultFramebuffer);
-        glViewport(0, 0, framebufferWidth, framebufferHeight);
-    }
-}
-
-- (BOOL)presentFramebuffer
-{
-    BOOL success = NO;
-    if (context) {
-        [MGLContext setCurrentContext:context];
-        glBindRenderbuffer(GL_RENDERBUFFER, colorRenderbuffer);
-        success = [context presentRenderbuffer:GL_RENDERBUFFER];
-    }
-    return success;
-}
-
-- (void)layoutSubviews
-{
-    [self deleteFramebuffer];
-}
-
-- (BOOL)isMultipleTouchEnabled
-{
-    return YES;
+    return (MGLLayer *)self.layer;
 }
 
 @end

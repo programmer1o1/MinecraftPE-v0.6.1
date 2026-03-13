@@ -1,5 +1,5 @@
 //
-//  minecraftpeAppDelegate.m
+//  minecraftpeAppDelegate.mm
 //  minecraftpe
 //
 //  Created by rhino on 10/17/11.
@@ -7,9 +7,6 @@
 //
 
 #import "minecraftpeAppDelegate.h"
-
-#import "EAGLView.h"
-
 #import "minecraftpeViewController.h"
 
 
@@ -21,7 +18,7 @@
 
 - (void) registerDefaultsFromFile:(NSString*)filename {
     NSString* pathToUserDefaultsValues = [[NSBundle mainBundle]
-                                      pathForResource:filename 
+                                      pathForResource:filename
                                       ofType:@"plist"];
     NSDictionary* userDefaultsValues = [NSDictionary dictionaryWithContentsOfFile:pathToUserDefaultsValues];
     [[NSUserDefaults standardUserDefaults] registerDefaults:userDefaultsValues];
@@ -43,7 +40,7 @@ NSError* audioSessionError = nil;
         name:AVAudioSessionInterruptionNotification
         object:audioSession];
 
-    audioSessionSoundCategory = AVAudioSessionCategoryAmbient;
+    audioSessionSoundCategory = AVAudioSessionCategoryPlayback;
     audioSessionError = nil;
 
     [audioSession setCategory:audioSessionSoundCategory error:&audioSessionError];
@@ -62,74 +59,66 @@ NSError* audioSessionError = nil;
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
-    // Override point for customization after application launch.
     [self initAudio];
 
-    self.window.rootViewController = self.viewController;
-#ifndef ANDROID_PUBLISH
-    NSLog(@"ViewController: %p\n", self.viewController);
-#endif
-    //[self registerDefaultsFromFile:@"userDefaults"];
+    // When using UIScene lifecycle (iOS 13+), the SceneDelegate creates the
+    // window and view controller.  The code below is the pre-scene fallback
+    // that keeps the app working on older iOS versions (or if the scene
+    // manifest is absent).
+    if (@available(iOS 13.0, *)) {
+        // Window creation handled by SceneDelegate
+    } else {
+        self.window = [[UIWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
+        minecraftpeViewController *vc = [[minecraftpeViewController alloc] init];
+        self.viewController = vc;
+        self.window.rootViewController = vc;
+        [vc release];
+        [self.window makeKeyAndVisible];
+    }
+
+    NSLog(@"ViewController: %p", self.viewController);
     return YES;
 }
 
+// ─── UIScene configuration (iOS 13+) ─────────────────────────────────────────
+
+- (UISceneConfiguration *)application:(UIApplication *)application
+    configurationForConnectingSceneSession:(UISceneSession *)connectingSceneSession
+                                  options:(UISceneConnectionOptions *)options
+    API_AVAILABLE(ios(13.0))
+{
+    UISceneConfiguration *config =
+        [[UISceneConfiguration alloc] initWithName:@"Default Configuration"
+                                       sessionRole:connectingSceneSession.role];
+    config.delegateClass = NSClassFromString(@"SceneDelegate");
+    return [config autorelease];
+}
+
+// ─── Pre-scene lifecycle callbacks (still used on < iOS 13) ──────────────────
+
 - (void)applicationWillResignActive:(UIApplication *)application
 {
-    /*
-     Sent when the application is about to move from active to inactive
-     state. This can occur for certain types of temporary interruptions
-     (such as an incoming phone call or SMS message) or when the user
-     quits the application and it begins the transition to the background
-     state.
-       Use this method to pause ongoing tasks, disable timers, and throttle
-     down OpenGL ES frame rates. Games should use this method to pause the game.
-     */
-#ifndef ANDROID_PUBLISH
-    NSLog(@"resign-active: %@\n", [NSThread currentThread]);
-#endif
+    NSLog(@"resign-active: %@", [NSThread currentThread]);
     [self.viewController stopAnimation];
 }
 
 - (void)applicationDidEnterBackground:(UIApplication *)application
 {
-    /*
-     Use this method to release shared resources, save user data, invalidate
-     timers, and store enough application state information to restore your
-     application to its current state in case it is terminated later.
-       If your application supports background execution, this method is
-     called instead of applicationWillTerminate: when the user quits.
-     */
     [self.viewController enteredBackground];
 }
 
 - (void)applicationWillEnterForeground:(UIApplication *)application
 {
-    /*
-     Called as part of the transition from the background to the inactive state;
-     here you can undo many of the changes made on entering the background.
-     */
 }
 
 - (void)applicationDidBecomeActive:(UIApplication *)application
 {
-    /*
-     Restart any tasks that were paused (or not yet started) while the
-     application was inactive. If the application was previously in the
-     background, optionally refresh the user interface.
-     */
-#ifndef ANDROID_PUBLISH
-    NSLog(@"become-active: %@\n", [NSThread currentThread]);
-#endif
+    NSLog(@"become-active: %@", [NSThread currentThread]);
     [self.viewController startAnimation];
 }
 
 - (void)applicationWillTerminate:(UIApplication *)application
 {
-    /*
-     Called when the application is about to terminate.
-     Save data if appropriate.
-     See also applicationDidEnterBackground:.
-     */
     [self.viewController stopAnimation];
 }
 
@@ -145,37 +134,24 @@ NSError* audioSessionError = nil;
     }
 }
 
-
 //
-// AudioSesssionDelegate
+// Audio session management
 //
 - (void)setAudioEnabled:(BOOL)status {
-    //NSLog(@"set-audio-enabled: :%d %@\n", status, [NSThread currentThread]);
-
     if(status) {
         NSLog(@"INFO - SoundManager: OpenAL Active");
-        // Set the AudioSession AudioCategory to what has been defined in soundCategory
 		[audioSession setCategory:audioSessionSoundCategory error:&audioSessionError];
         if(audioSessionError) {
-            NSLog(@"ERROR - SoundManager: Unable to set the audio session category with error: %@\n", audioSessionError);
+            NSLog(@"ERROR - SoundManager: Unable to set the audio session category with error: %@", audioSessionError);
             return;
         }
-        
-        // Set the audio session state to true and report any errors
 		[audioSession setActive:YES error:&audioSessionError];
 		if (audioSessionError) {
-            NSLog(@"ERROR - SoundManager: Unable to set the audio session state to YES with error: %@\n", audioSessionError);
+            NSLog(@"ERROR - SoundManager: Unable to set the audio session state to YES with error: %@", audioSessionError);
             return;
         }
     } else {
         NSLog(@"INFO - SoundManager: OpenAL Inactive");
-
-        // Set the audio session state to false and report any errors
-//		[audioSession setActive:NO error:&audioSessionError];
-//		if (audioSessionError) {
-//            NSLog(@"ERROR - SoundManager: Unable to set the audio session state to NO with error: %@\n", audioSessionError);
-//            return;
-//        }
     }
 
     [_viewController setAudioEnabled:status];

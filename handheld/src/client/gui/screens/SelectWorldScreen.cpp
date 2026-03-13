@@ -310,7 +310,7 @@ void SelectWorldScreen::tick()
 			if (status > -1) {
 				if (status == 1) {
 					StringVector sv = minecraft->platform()->getUserInput();
-					
+
 					// Read the level name.
 					// 1) Trim name 2) Remove all bad chars 3) Append '-' chars 'til the name is unique
 					std::string levelName = Util::stringTrim(sv[0]);
@@ -343,8 +343,13 @@ void SelectWorldScreen::tick()
 					if (sv.size() >= 3 && sv[2] == "survival")
 						isCreative = false;
 
+					// Read the world type
+					int worldType = WorldType::Old;
+					if (sv.size() >= 4 && sv[3] == "infinite")
+						worldType = WorldType::Infinite;
+
 					// Start a new level with the given name and seed
-					LevelSettings settings(seed, isCreative? GameType::Creative : GameType::Survival);
+					LevelSettings settings(seed, isCreative? GameType::Creative : GameType::Survival, worldType);
 					LOGI("Creating a level with id '%s', name '%s' and seed '%d'\n", levelId.c_str(), levelName.c_str(), seed);
 					minecraft->selectLevel(levelId, levelName, settings);
 					minecraft->hostMultiplayer();
